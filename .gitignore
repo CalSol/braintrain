@@ -1,0 +1,32 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.d
+*.sym
+*.map
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Eclipse Environment Metadata
+.project
+.cproject
+.metadata
+.settings
+
+# OSX annoyances
+*.DS_Store
+
+# SCons build artifacts
+.sconsign.dblite
+build/
+
+# Language settings xml files.
+language.settings.xml

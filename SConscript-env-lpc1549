@@ -1,0 +1,30 @@
+# Modifies the environment to build mbed firmware for the LPC1549 using GCC-ARM
+Import('env')
+
+env.Append(CCFLAGS = '-O1 -g')
+env.Append(LINKFLAGS = '--specs=nosys.specs')
+env['MBED_LIB_LINKSCRIPTS_ROOT'] = Dir('mbed/libraries/mbed').srcnode()
+
+SConscript('mbed-scons/targets/SConscript-mbed-env-lpc1549', exports='env')
+env.Append(CXXFLAGS = '-std=c++11')  # Override the mbed default
+
+mbed_lib = env.MbedLikeLibrary('mbed', 'mbed/libraries/mbed/',
+                               ['api/', 'common/', 'hal/', 'targets/cmsis/', 'targets/hal/'],
+                               )
+env.Prepend(LIBS=mbed_lib)
+
+rtos_lib = env.MbedLikeLibrary('rtos', 'mbed/libraries/rtos/',
+                               ['rtx/', 'rtos/'],
+                               )
+env.Prepend(LIBS=rtos_lib)
+
+env.Append(CPPPATH=[Dir('zephyr-common/hal').srcnode(),
+                    Dir('zephyr-common/api').srcnode(),
+                   ])
+
+env.Prepend(LIBS=env.StaticLibrary('zephyr-common',
+                                   [Glob('zephyr-common/targets/hal/TARGET_NXP/TARGET_LPC15XX/*.cpp'),
+                                    Glob('zephyr-common/hal/*.cpp'),
+                                    Glob('zephyr-common/common/*.cpp'),
+                                    Glob('zephyr-common/api/*.cpp'),
+                                   ]))
