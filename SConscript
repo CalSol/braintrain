@@ -6,5 +6,5 @@ env.Append(CCFLAGS=['-Wall', '-Werror'])
 
 env.CalSolFW('brain',
   srcs=Glob('src/*.cpp'),
-	includes=['src']
+  includes=['src']
 )

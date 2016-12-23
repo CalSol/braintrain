@@ -7,7 +7,6 @@ SetOption('num_jobs', multiprocessing.cpu_count() + 1)
 
 # On Windows platforms, force gcc-style (instead of MSVC-style) arguments.
 env = Environment(ENV=os.environ, tools=['g++', 'gcc', 'gas', 'ar', 'gnulink'])
-Export('env')
 
 # Build wrapper for firmware that eliminates problematic files and
 # automatically builds the .elf, .bin, and dumps debugging data
@@ -17,7 +16,7 @@ def calsol_fw(env, target, srcs, includes):
   prog = env.Program(target, srcs,
       CPPPATH=env['CPPPATH'] + includes,
   )
-  bin = env.Objcopy(prog)
+  bin = env.Binary(prog)
   size = env.SymbolsSize(prog)
   dump = env.Objdump(prog)
   all = env.Alias(target, [prog, bin, size, dump])
@@ -37,14 +36,30 @@ if ARGUMENTS.get('VERBOSE') != '1':
     'CCCOMSTR': 'CC',
     'CXXCOMSTR': 'CXX',
     'LINKCOMSTR': 'LD',
-    'RANLIBCOMSTR': 'RANLIB',
+    'RANLIBCOMSTR': 'IND',
+    'BINCOMSTR': 'BIN',
+    'OBJDUMPCOMSTR': 'DUMP',
+    'SYMBOLSCOMSTR': 'DUMP',
+    'SYMBOLSIZESCOMSTR': 'DUMP',
   })
 
 ###
 ### Imports
 ###
-SConscript('mbed-scons/SConscript-env-gcc-arm', duplicate=0)
-SConscript('mbed-scons/SConscript-mbed', duplicate=0)
+SConscript('mbed-scons/SConscript-mbed', exports=['env'], duplicate=0)
+SConscript('mbed-scons/SConscript-env-gcc-arm', exports=['env'], duplicate=0)
+
+###
+### Global configurations
+###
+env.Append(CCFLAGS=[
+  '-O1',
+  '-g',
+])
+env.Append(LINKFLAGS=[
+  '--specs=nosys.specs',
+  '-u', '_printf_float',
+])
 
 ###
 ### Platform-specific build targets for mbed libraries
@@ -54,12 +69,12 @@ SConscript('mbed-scons/SConscript-mbed', duplicate=0)
 env_orig = env
 
 env = env_orig.Clone()
-SConscript('SConscript-env-lpc1549', variant_dir='build/lpc1549', exports='env', duplicate=0)
+SConscript('SConscript-env-lpc1549', variant_dir='build/lpc1549',
+    exports=['env'], duplicate=0)
 env_lpc1549 = env
 
 ###
 ### Actual build targets here
 ###
 SConscript('SConscript', variant_dir='build', 
-					exports=['env_lpc1549'],
-					duplicate=0)
+    exports=['env_lpc1549'], duplicate=0)

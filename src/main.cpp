@@ -1,25 +1,65 @@
 #include "mbed.h"
 
-DigitalOut LedR(P0_5);
-DigitalOut LedG(P0_6);
-DigitalOut LedB(P0_7);
+DigitalOut ledR(P0_5);
+DigitalOut ledG(P0_6);
+DigitalOut ledB(P0_7);
 
-DigitalOut Led1(P0_3);
-DigitalOut Led2(P0_9);
+DigitalOut led1(P0_3);
+DigitalOut led2(P0_9);
+
+DigitalIn btn(P0_4);
+
+CAN can(P0_28, P0_29);
 
 int main() {
-  LedR = 1;
-  LedG = 1;
-  LedB = 1;
-  Led1 = 0;
-  Led2 = 0;
+  ledR = 1;
+  ledG = 1;
+  ledB = 1;
+  led1 = 0;
+  led2 = 0;
+
+  Timer lastBtnTime;
+  lastBtnTime.start();
+  bool lastBtn = 0;
+  bool toggle = 0;
+
+  can.frequency(100000);
+
+  ledG = 0;
+  wait(0.125);
+  ledG = 1;
 
   while (1) {
-    LedG = 0;
-    LedB = 1;
-    wait(0.25);
-    LedG = 1;
-    LedB = 0;
-    wait(0.25);
+    CANMessage msg;
+    while (can.read(msg)) {
+      led1 = !led1;
+    }
+
+    if (btn == 0 && lastBtn == 1) {
+      if (lastBtnTime.read_ms() > 10) {
+        CANMessage msg;
+        msg.format = CANStandard;
+        msg.id = 42;
+        msg.len = 0;
+        can.write(msg);
+        toggle = !toggle;
+        ledB = !toggle;
+        lastBtn = 0;
+      }
+    } else if (btn == 1 && lastBtn == 0) {
+      if (lastBtnTime.read_ms() > 10) {
+        lastBtn = 1;
+      }
+    } else {
+      lastBtnTime.reset();
+    }
+
+    led2 = !btn;
+  }
+
+  // Reset CAN controller
+  if (LPC_C_CAN0->CANCNTL & (1 << 0)) {
+      LPC_C_CAN0->CANCNTL &= ~(1 << 0);
+      ledR = 0;
   }
 }

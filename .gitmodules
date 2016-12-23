@@ -3,4 +3,4 @@
 	url = git@github.com:ducky64/mbed-scons.git
 [submodule "mbed"]
 	path = mbed
-	url = git@github.com:CalSol/mbed.git
+	url = git@github.com:mbedmicro/mbed.git

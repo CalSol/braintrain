@@ -1,30 +1,27 @@
 # Modifies the environment to build mbed firmware for the LPC1549 using GCC-ARM
 Import('env')
 
-env.Append(CCFLAGS = '-O1 -g')
-env.Append(LINKFLAGS = '--specs=nosys.specs')
-env['MBED_LIB_LINKSCRIPTS_ROOT'] = Dir('mbed/libraries/mbed').srcnode()
+env.ConfigureMbedTarget('LPC1549', File('mbed/targets/targets.json').srcnode())
 
-SConscript('mbed-scons/targets/SConscript-mbed-env-lpc1549', exports='env')
-env.Append(CXXFLAGS = '-std=c++11')  # Override the mbed default
+# Build the mbed library as a static library
+mbed_paths = env.GetMbedSourceDirectories('mbed')
+env.Append(CPPPATH=[x.srcnode() for x in mbed_paths])  # this allows duplicate=0
+env['MBED_LINKSCRIPT'] = env.GetMbedLinkscript(mbed_paths)
+env.Append(CPPDEFINES=[
+    'MBED_CONF_PLATFORM_STDIO_BAUD_RATE=9600',
+    'MBED_CONF_PLATFORM_DEFAULT_SERIAL_BAUD_RATE=9600',
+    'MBED_CONF_PLATFORM_STDIO_FLUSH_AT_EXIT==1',
+    'MBED_CONF_PLATFORM_STDIO_CONVERT_NEWLINES=0'
+])
+           
+env_mbed = env.Clone()
+env_mbed.Append(CCFLAGS='-w')  # don't care about errors in dependencies
+mbed_lib = env_mbed.StaticLibrary('mbed', env.GetMbedSources(mbed_paths))
 
-mbed_lib = env.MbedLikeLibrary('mbed', 'mbed/libraries/mbed/',
-                               ['api/', 'common/', 'hal/', 'targets/cmsis/', 'targets/hal/'],
-                               )
+env.Append(LINKFLAGS=[
+  '-Wl,--whole-archive',  # used to compile mbed HAL, which uses funky weak symbols
+  mbed_lib,
+  '-Wl,--no-whole-archive',
+])
+
 env.Prepend(LIBS=mbed_lib)
-
-rtos_lib = env.MbedLikeLibrary('rtos', 'mbed/libraries/rtos/',
-                               ['rtx/', 'rtos/'],
-                               )
-env.Prepend(LIBS=rtos_lib)
-
-env.Append(CPPPATH=[Dir('zephyr-common/hal').srcnode(),
-                    Dir('zephyr-common/api').srcnode(),
-                   ])
-
-env.Prepend(LIBS=env.StaticLibrary('zephyr-common',
-                                   [Glob('zephyr-common/targets/hal/TARGET_NXP/TARGET_LPC15XX/*.cpp'),
-                                    Glob('zephyr-common/hal/*.cpp'),
-                                    Glob('zephyr-common/common/*.cpp'),
-                                    Glob('zephyr-common/api/*.cpp'),
-                                   ]))
