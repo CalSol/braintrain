@@ -20,6 +20,7 @@
 .cproject
 .metadata
 .settings
+.pydevproject
 
 # OSX annoyances
 *.DS_Store
