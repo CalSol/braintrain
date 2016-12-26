@@ -53,7 +53,7 @@ SConscript('mbed-scons/SConscript-env-gcc-arm', exports=['env'], duplicate=0)
 ### Global configurations
 ###
 env.Append(CCFLAGS=[
-  '-O1',
+  '-O2',
   '-g',
 ])
 env.Append(LINKFLAGS=[
