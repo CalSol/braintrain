@@ -1,11 +1,12 @@
-#include <cmath>
+#include <stdlib.h>  // for abs
+#include <math.h>  // for fabs, fmod
 
 #include "ledutils.h"
 
 void hsv_to_rgb_float(float h_deg, float s, float v,
     float *r_out, float *g_out, float *b_out) {
   float C = v * s;
-  float X = C * (1 - std::abs(fmod(h_deg / 60.0, 2) - 1));
+  float X = C * (1 - fabs(fmod(h_deg / 60.0, 2) - 1));
   float m = (v - C);
   h_deg = fmod(h_deg, 360);
   if (0 <= h_deg && h_deg < 60) {
@@ -39,7 +40,7 @@ void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
     uint16_t *r_out, uint16_t *g_out, uint16_t *b_out) {
   uint16_t C = (uint32_t)v * s / 65535;
   int32_t h_millipct = (((int32_t)h_cdeg * 10 / 60) % 2000) - 1000;  // 1000x
-  uint16_t X = C * (1000 - std::abs(h_millipct)) / 1000;
+  uint16_t X = C * (1000 - abs(h_millipct)) / 1000;
   uint16_t m = v - C;
 
   h_cdeg = h_cdeg % 36000;
