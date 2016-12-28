@@ -14,9 +14,12 @@ DigitalIn btn(P0_4);
 RawSerial serial(P0_8, NC);
 
 int main() {
-  /* YOUR INITIALIZATION HERE */
-
   while (true) {
-    /* YOUR CODE HERE */
+    led1 = 1;
+    led2 = 0;
+    wait(0.5);
+    led1 = 0;
+    led2 = 1;
+    wait(0.5);
   }
 }
