@@ -24,10 +24,10 @@ This lab will walk through some simple examples to get started.
 > Do these before the lab:
 >
 > 0. Do soldering training (make your own BRAINv3.3).
-> 0. Set up [the build system](../Zephyr-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
+> 0. Set up [the build system](https://github.com/CalSol/Zephyr-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
 
 0. If doing this lab during one of the scheduled training sessions, consider pairing up.
-0. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](../Zephyr-FW#project-configuration)), or use command-line scons and openocd.
+0. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](https://github.com/CalSol/Zephyr-FW#project-configuration)), or use command-line scons and openocd.
 0. Sanity check: build the code, either by running `scons` at the repository root, or in Eclipse. 
 
 ## Lab 1.2: "Hello, world"
