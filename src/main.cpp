@@ -11,7 +11,7 @@ DigitalOut led2(P0_9);
 
 DigitalIn btn(P0_4);
 
-RawSerial serial(P0_8, NC);
+RawSerial serial(P0_8, NC, 115200);
 
 int main() {
   /* YOUR INITIALIZATION HERE */
