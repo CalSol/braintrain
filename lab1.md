@@ -180,11 +180,14 @@ We've covered the basics, but that's still kind of boring. Especially since we h
 **Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz. 
 
 Since this is a non-trivial task, we'll break it down into several parts:
+
 0. Start with a [HSV (hue, saturation, and value)](https://en.wikipedia.org/wiki/HSL_and_HSV) representation of color. We'll work with floating point (`float`) data types for now.
+
   > At a high level, the values in HSV represent:
   > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here.
+  
 0. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
 0. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
 0. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
