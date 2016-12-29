@@ -186,7 +186,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
   > At a high level, the values in HSV represent:
   > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
-  > - Value: brightness, normalized to [0, 1] here.
+  > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
   
 0. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
 0. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
@@ -198,7 +198,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 0. Write the brightness to the output.
 
 ### Incrementing the hue
-This can be done by declaring a local variable, `hue` outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick, and 1/1200 s between ticks.
+This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
 
 ```c++
 int main() {
@@ -213,7 +213,7 @@ int main() {
 ```
 
 ### Converting HSV to RGB
-The details are complicated, so we've handled the details for you in the form library code that's included in the training repository.
+The details are complicated, so we've handled the details for you in the form of library code that's included in the training repository.
 
 To use the library, you should first include the header, which contains the function signatures. Do this under the `mbed.h` include at the top of the file:
 
@@ -237,7 +237,7 @@ float r, g, b;
 hsv_to_rgb_float(hue, 1, 1, &r, &g, &b);
 ```
 
-> One way to work around C/C++'s lack of multiple return values is to pass in a pointer to a variable where the output value is stored. In the above snippet, we pass in the address of `r`, `g`, and `b` to the function. After the call, the computed r, g, b values are stored in those variables.
+> One way to work around C/C++'s lack of multiple return values is to pass in a _pointer_ to the output variable, or the location where it is stored. In the above snippet, we pass in the address of `r`, `g`, and `b` to the function. After the call, the computed r, g, b values are stored in those variables.
 >
 > The `&` operator gets the memory address of a variable, returning a pointer to the object. While not used here, the `*` operator _dereferences_ a pointer, either returning or allowing reassignment to the variable pointed to.
 
@@ -254,7 +254,7 @@ r = r * r;
 This is left as an exercise for the reader. The subtraction operator is exactly what you'd expect.
 
 ### Writing out the brightness
-What we want to do is to dim the LED, but we only have digital outputs on the LEDs. Instead, we take advantage of persistence of vision, where average intensity over a short amount of time is perceived. If we blink a LED on and off really fast, the perceived intensity will be the _duty cycle_, or on time divided by the total period.
+What we want to do is to dim the LED, but we only have digital outputs on the LEDs. Instead, we take advantage of persistence of vision, where average intensity over a short amount of time is perceived. If we blink a LED on and off really fast, the perceived intensity will be the _duty cycle_, or on time divided by the total period (on time plus off time).
 
 This can be done in software, but modern microcontrollers have [pulse-width modulation](https://en.wikipedia.org/wiki/Pulse-width_modulation) peripherals to handle this for you. mbed provides an interface through [PwmOut](https://developer.mbed.org/handbook/PwmOut), where you assign the output duty cycle as a float:
 
@@ -262,7 +262,7 @@ This can be done in software, but modern microcontrollers have [pulse-width modu
 ledR = 0.25;
 ```
 
-will set the red LED pin to high 25% of the time and low for the remaining 75% of time. Because the polarity is inverted (LED emits light when the pin is low), this means the LED is actually on 75% of the time (you compensated for this effect above).
+will set the red LED pin to high 25% of the time and low for the remaining 75% of time. Because the polarity is inverted (LED emits light when the pin is low), this means the LED is actually on 75% of the time.
 
 PwmOut's default period is 20ms, which is far too slow for our 1,200 Hz update rate. In your initialization code, set all the LED channels' period to 500 us:
 
@@ -275,9 +275,9 @@ ledB.period_us(500);
 Once you've put everything together, you can take a look at [the solution here](solutions/lab1.5.cpp).
 
 ## Extra for Experts Lab 1.6: Embedded constraints
-If you timed a full hue cycle in the previous section, you will note that it actually takes around 4-5 seconds. Our delay calculations were fine, but those failed to account for compute overhead which make up a non-negligible portion of the 1/1200s = 833 us tick cycle. In fact, if you time just the `hsv_to_rgb_float`, the squaring, and the inversion code, those take between 259 us and 302 us (or approximately 3,100 to 3,600 instructions at 12 MHz).
+If you timed a full hue cycle in the previous section, you will note that it actually takes around 4-5 seconds. Our delay calculations were fine, but those failed to account for compute overhead which make up a non-negligible portion of the 1/1200s = 833 us tick cycle. In fact, if you time just the `hsv_to_rgb_float`, the squaring, and the inversion code, those take between 259 and 302 us (or approximately 3,100 to 3,600 instructions at 12 MHz).
 
-Why is some seemingly simple arithmetic so expensive? Because of the use of floating point - unlike a PC, lower-end microcontrollers don't have built-in floating point hardware and must emulate it in software, so each operation takes many instruction cycles. Since we really have no need for floating point (other than laziness) here, we can re-write it in fixed point, with integer types.
+Why is some seemingly simple arithmetic so expensive? Because of the use of floating point - unlike a PC, lower-end microcontrollers don't have built-in floating point hardware and must emulate it in software, so each operation takes many instruction cycles. Since we really have no need for floating point here (other than laziness), we can re-write it in fixed point, with integer types.
 
 **Objective**: Optimize computation so the LED hue period is closer to 3 s.
 
@@ -302,7 +302,7 @@ int main() {
 ```
 
 ### Converting HSV to RGB
-Similarly as before, but with a scaling factor on constants and calling the `uint16_t` version of the conversion function:
+Similar as before, but with a scaling factor on constants and calling the `uint16_t` version of the conversion function:
 
 ```c++
 uint16_t r, g, b;
@@ -310,7 +310,7 @@ hsv_to_rgb_uint16(hue, 65535, 65535, &r, &g, &b);
 ```
 
 ### Square the RGB brightness
-This is slightly tricky - before the brightness for each channel occupies the full value of the data type (0 to 65535 for `uint16_t`), we must expand the data type to a 32-bit integer before squaring. Then, we need re-normalize it to the original range by dividing by 65535:
+This is slightly tricky - since the brightness for each channel occupies the full value of the data type (0 to 65535 for `uint16_t`), we must expand the data type to a 32-bit integer before squaring. Then, we need re-normalize it to the original range by dividing by 65535:
 
 ```c++
 r = (uint32_t)r * r / 65535;
@@ -337,12 +337,12 @@ Once you've put together all the pieces, check out [the solution here](solutions
 ### Timing results
 If you run the code and mentally time the period, it will appear very close to 3s per period.
 
-Timing just the compute portion gives a running time of between 26 us and 30 us - approximately a 10x speedup from the floating-point version. And this is just for simple arithmetic operations - more advanced floating-point functions like log and sin are much more expensive.
+Timing just the compute portion gives a running time of between 26 and 30 us - approximately a 10x speedup from the floating-point version. And this is just for simple arithmetic operations - more advanced floating-point functions like log and sin are even more expensive.
 
 This explores just one of the ways programming for low-power embedded systems is different than programming for PC applications. Other major constraints include slower processor speed, limited program memory, limited data memory, and no operating system protections (against, for example, stack overflow).
 
 ### Alternative solutions
-To be fair, another solution would be to leave the floating-point computation as-is and use a timer to control the delay. The timer would be started before the computation, and the delay replaced with waiting until the timer reaches the delay time. While this is more accurate (since even fixed-point incurs computation time), the goal here was to provide an example of an important embedded system limitation.
+To be fair, another solution would be to leave the floating-point computation as-is and use a timer to control the delay. The timer would be started before the computation, and the delay replaced with waiting until the timer reaches the delay time. While this is more accurate (since even fixed-point computations take time), the goal here was to provide an example of an important embedded system limitation.
 
 ## To infinity and beyond
 This tutorial covered the basics of 4 types of digital I/O: DigitalOut (to drive a LED), DigitalIn (to read a button), PwmOut (to fade LEDs), and RawSerial (serial console to host PC). This is the tip of the iceberg of what you can do with an embedded system and what electronic devices are available. Stay tuned for the next lab, which will get you working with a [CAN bus](https://en.wikipedia.org/wiki/CAN_bus) (the inter-board network on our solar car) and explore approaches to multitasking.

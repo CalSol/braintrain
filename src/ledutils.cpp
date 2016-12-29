@@ -27,15 +27,6 @@ void hsv_to_rgb_float(float h_deg, float s, float v,
   *b_out = *b_out + m;
 }
 
-float linear_perceived_invert_float(float in) {
-  if (in < 0) {
-    in = 0;
-  } else if (in > 1) {
-    in = 1;
-  }
-  return 1.0 - (in * in);
-}
-
 void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
     uint16_t *r_out, uint16_t *g_out, uint16_t *b_out) {
   uint16_t C = (uint32_t)v * s / 65535;
@@ -60,9 +51,4 @@ void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
   *r_out = *r_out + m;
   *g_out = *g_out + m;
   *b_out = *b_out + m;
-}
-
-uint16_t linear_perceived_invert_uint16(uint16_t in) {
-  uint32_t sq = (uint32_t)in * in / 65535;  // square and re-normalize
-  return 65535 - sq;
 }
