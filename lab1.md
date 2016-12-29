@@ -20,6 +20,15 @@ A microcontroller is basically a full computer system on a chip, including a CPU
 
 This lab will walk through some simple examples to get started.
 
+## Sanity Check
+If you want to sanity-check your BRAINv3.3 hardware, you can flash the included `braintest.bin` with OpenOCD:
+
+```
+openocd -f interface/cmsis-dap.cfg -f lpc1549_openocd.cfg -c init -c "reset halt" -c "flash erase_sector 0 0 last" -c "flash write_image braintest.bin" -c "reset run" -c "exit"
+```
+
+This should fade the RGB LED through all the colors over a period of 3 seconds, toggling the side LEDs every half-period. Pressing the user button (left one) should pause the sequence. If any of this doesn't work, then something is wrong with your setup and needs to be fixed before proceeding further.
+
 ## Lab 1.1: Getting started
 > Do these before the lab:
 >
