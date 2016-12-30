@@ -65,7 +65,7 @@ RawSerial serial(P0_8, NC, 115200);
 >
 > The circuit on the BRAINv3.3 for the left and right LEDs is: 
 >
-> (diagram here)
+> ![Image](docs/led.png?raw=true)
 > 
 > The LED turns on (emits light) when the pin voltage is high.
 
@@ -126,7 +126,7 @@ if (!btn) {
 >
 > The circuit on the BRAINv3.3 for the user button is:
 >
-> (diagram here)
+> ![Image](docs/switch.png?raw=true)
 >
 > Commonly, user buttons are designed like this: a resistor pulls up the pin high when the switch is not pressed, and the switch shorts the pin low when the button is pressed. This also explains the inversion (`!btn`) in the example above to detect a pressed (low) state.
 
@@ -200,9 +200,9 @@ Since this is a non-trivial task, we'll break it down into several parts:
 0. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
 0. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
 0. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
-0. Invert the RGB brightness, since the LED is common-anode and only turns on when a channel is low.
+0. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
    
-   (TODO: diagram)
+   ![Image](docs/rgbled.png?raw=true)
    
 0. Write the brightness to the output.
 
