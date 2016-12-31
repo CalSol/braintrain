@@ -134,6 +134,8 @@ Done? Compare against [one possible solution here](solutions/lab1.3.cpp).
 
 You may realize that while the high-level objective (pause blinking) might appear clear, there are many different implementations that could result in subtly different behaviors. For example, it's unspecified whether pressing the button only needs to stop toggling the LED (as in the example solution) or if it should pause the counter (for example, if you press the button 0.25s after the last toggle, it shouldn't toggle for 0.25s after you release the button). For a toy example and at these timescales for human reaction, it's inconsequential, but that won't be true for every system you work on...  
 
+> Switches also suffer from mechanical bounce, where during press or release, the switch may jump between connected and disconnected several times before settling down. For applications which rely on edge detection (the high to low or low to high transition on the input) and sample fast enough, this may cause it to register false edges. Two common methods to "debounce" switches are either with a RC (resistor-capacitor) circuit or with filtering software.
+
 ## Lab 1.4: "Hello, world", but for reals
 Most programmers will find a `printf` like utility to be very helpful. Let's get a terminal up and running and displaying data from your BRAIN.
 
