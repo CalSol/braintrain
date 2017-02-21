@@ -21,10 +21,10 @@ CAN messages carry these pieces of user data:
 
 The ID field is used to indicate the kind of data being transmitted (for example, "battery voltage") and the data contains the actual data (continuing the example, 107.4 V encoded as 2 bytes fixed point). Message IDs must be unique on any single CAN bus. Because of the priority system, giving a lower ID to more important messages (or messages with stricter deadlines) is recommended.
 
-Usually, nodes transmit data regularly (for example, battery voltage is automatically sent every second by the BMS), but the RTR field can be used to request specific data. Acting on RTR messages must be handled by application code, and it's not something we use.
+Usually, nodes transmit data regularly (for example, battery voltage is automatically sent every second by the BMS), but the RTR field can be used to request specific data. Responding to RTR messages must be handled by application code, and it's not something we use.
 
 CAN also provides these non-user data fields:
-- [CRC](https://en.wikipedia.org/wiki/Cyclic_redundancy_check), 15 bits, as a checksum so corrupted messages are discarded.
+- [Cyclic Redundancy Check (CRC)](https://en.wikipedia.org/wiki/Cyclic_redundancy_check), 15 bits, as a checksum so corrupted messages are discarded.
 - Acknowledgement, one bit, asserted by any other node upon successful reception (including CRC check).
   - If a message is not acknowledged by any other node, the transmitter will retransmit it.
   - However, it is impossible to tell from the acknowledgement bit if a message was received by a particular node.
@@ -34,7 +34,13 @@ CAN also provides these non-user data fields:
 CAN controllers keep count of errors, and too many errors may result in a _bus-off_ condition, where the controller disconnects from the bus. The CAN controller must be re-initialized (through user-level code) before communications can resume. The full list of error counter rules is complex and a more detailed explanation is [here](https://www.kvaser.com/about-can/the-can-protocol/can-error-handling/).
 
 ### Physical Layer
+_This is only a very high-level overview._
 
+The CAN bus itself consists of two wires, CANH and CANL as a differential pair, to which all nodes are attached. There are two bit levels, either dominant (0) or recessive (1). When multiple nodes transmit simultaneously (collision), a dominant bit takes priority over a recessive bit (the mechanism for ID-based arbitration). If no node is transmitting, the bus is held at a recessive level.
+
+The CAN controller operates on two different, single-ended (non-differential), logic-level lines: TXD and RXD. RXD indicates the current bit level on the CANH/CANL lines, while TXD indicates the bit to transmit.
+
+A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/CANL lines. While CAN controllers may be a on-chip peripheral on some microcontrollers, CAN transceivers are usually separate chips and may provide some degree of electrical isolation.
 
 ## Lab 2.1: Getting Started: Hardware
 Hook up a pin to
