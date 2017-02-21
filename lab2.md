@@ -43,7 +43,10 @@ The CAN controller operates on two different, single-ended (non-differential), l
 A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/CANL lines. While CAN controllers may be a on-chip peripheral on some microcontrollers, CAN transceivers are usually separate chips and may provide some degree of electrical isolation.
 
 ## Lab 2.1: Getting Started: Hardware
-Hook up a pin to
+Connect BRAINv3.3 to CAN transceiver board.
+Connect transceiver to class bus with pre-programmed master node. If working alone, there should be a bus-on-a-breadboard in storage with Lab1.4 implemented so you have something to behaviorally check your work against.
+
+TODO: ckt diagram
 
 Note: the example solutions use P0_28 for RXD and P0_29 for TXD.
 
@@ -51,4 +54,10 @@ Note: the example solutions use P0_28 for RXD and P0_29 for TXD.
 Transmit a CAN message on a button press, which pulses a remote LED. Sketch for edge detection also provided.
 
 ## Lab 2.3: Receiving CAN Messages
-Receive a message with a particular ID which sets the
+Receive a regularly-sent message with a particular ID which sets the RGB LED hue and intensity, allowing all the bus lights to be synchronized.
+
+## Extra for Experts Lab 1.4: Cooperative Multitasking
+Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using timer-based polling
+
+## Extra for Experts Lab 1.5: Threaded Multitasking
+Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using mbed RTOS
