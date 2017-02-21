@@ -2,7 +2,7 @@
 BRAINv3-based firmware training
 
 Labs currently available:
-- [lab1.md](Lab 1: Embedded Introduction)
+- [Lab 1: Embedded Introduction](lab1.md)
 
 Coming soon:
-- [lab2.md](Lab 2: CAN Bus and Multitasking)
+- [Lab 2: CAN Bus and Multitasking](lab2.md)
