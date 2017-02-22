@@ -45,21 +45,99 @@ The CAN controller operates on two different, single-ended (non-differential), l
 A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/CANL lines. While CAN controllers may be a on-chip peripheral on some microcontrollers, CAN transceivers are usually separate chips and may provide some degree of electrical isolation.
 
 ## Lab 2.1: Getting Started: Hardware
-Connect BRAINv3.3 to CAN transceiver board.
-Connect transceiver to class bus with pre-programmed master node. If working alone, there should be a bus-on-a-breadboard in storage with Lab1.4 implemented so you have something to behaviorally check your work against.
+The LPC1549 on the BRAINv3.3 has a CAN controller, but no onboard CAN transceiver. You will need to connect the BRAIN to an external CAN transceiver breakout: connect one BRAIN IO to RXD, another to TXD, and the power supply (Vcc and GND) to the 3.3v microcontroller supply. Connect the CAN side lines (CANH, CANL, Vcc, GND) to the bus signal and supply lines. If working in a class, there should be a pre-programmed master node on the bus. If working alone, there should be a bus-on-a-breadboard in storage with Lab1.4 implemented so you have something to behaviorally check your work against.
 
 TODO: ckt diagram
 
-Note: the example solutions use P0_28 for RXD and P0_29 for TXD.
+In the example code skeletons, replace `RXD_PIN` and `TXD_PIN` with the appropriate pin name (like `P0_28`). Note that the example solutions use `P0_28` for RXD and `P0_29` for TXD.
 
 ## Lab 2.2: Sending CAN Messages
-Transmit a CAN message on a button press, which pulses a remote LED. Sketch for edge detection also provided.
+The master node is configured to pulse its white LED on for 0.25 seconds when receiving a CAN message with ID 0x42.
 
-## Lab 2.3: Receiving CAN Messages
+**Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node.
+
+Start with this code skeleton:
+
+```c++
+#include "mbed.h"
+
+#include "ledutils.h"
+
+PwmOut ledR(P0_5);
+PwmOut ledG(P0_6);
+PwmOut ledB(P0_7);
+
+DigitalOut led1(P0_3);
+DigitalOut led2(P0_9);
+
+DigitalIn btn(P0_4);
+
+RawSerial serial(P0_8, NC, 115200);
+
+CAN can(RXD_PIN, TXD_PIN);
+
+int main() {
+  // Start with RGB LED off
+  ledR = 1;
+  ledG = 1;
+  ledB = 1;
+
+  // Initialize CAN controller at 1 Mbaud
+  can.frequency(1000000);
+
+  while (true) {
+    /* YOUR CODE HERE */
+  }
+}
+```
+
+_Remember to replace `RXD_PIN` and `TXD_PIN` with the appropriate pins based on your hardware configuration. Objects declarations for the on-board hardware (LEDs, switches, and a serial console), have been provided for your convenience._
+
+### Detecting Button Presses
+
+The first thing you need to do is to detect a button press. Unlike in the previous lab, where the application was only _level-sensitive_ (cares about the state of the button, whether it is pressed or not), this application is _edge-sensitive_ (we will define a button press as the up to down action). The simplest solution is to, in the main loop, track the previous button state and compare the current button state against the previous state. A button press is when the previous button state is `1` (up) and the current button state is `0` (down). Remember to update the previous button state at the end of each loop.
+
+In keeping with efficient development practices, you may want to test your button press detector in isolation before stacking CAN on top of it. One simple method is to toggle an LED on each press. You may also have it print something to the serial console.
+
+Problems? Common issues may be:
+- Remember to declare your previous button state outside the `while (true)` main loop. Otherwise, it will re-initialize each time around the loop and won't be very useful as a persistent tracker.
+- Are you losing edges? Make sure the button state compare and update happen atomically with regards to reading the button state. That is, if you read the button during a compare operation, then read it again to update the previous state, there's no guarantee that both reads return the same result, from the same time.
+  - A solution around this is to read the button state (once per loop!) into a temporary current state variable, then use that variable in the comparison and update operations.
+- Are you detecting multiple edges per press? This is a limitation of mechanical switches: they may bounce for a few milliseconds before they settle. If you sample fast enough, these may register as false edges.
+  - One solution is to filter in hardware. The most common approach is adding a RC filter.
+  - Debouncing can also be implemented in firmware. One approach is to wait for the switch signal to settle for some amount of time before changing the current state. This requires additional code (and a very small amount of compute), but no hardware (and hence, no recurring costs).
+  - For the purposes of this lab, ignore this effect.
+
+### Writing to CAN
+
+Compared to the button press, writing to the CAN bus is simple. First, create a message object using the id-only `CANMessage` constructor:
+
+```c++
+CANMessage msg(0x42);
+```
+
+Then, transmit that message using `CAN::write(CANMessage)`:
+
+```c++
+can.write(msg);
+```
+
+Note that you can combine both operations into one line:
+
+```c++
+can.write(CANMessage(0x42));
+```
+
+Have your edge detection code execute the above on a button press, and you should be done. Feel free to compare against the [solution](solutions/lab2.2.cpp), too.
+
+## Lab 2.3: CAN Messages with Data
+
+
+## Lab 2.4: Receiving CAN Messages
 Receive a regularly-sent message with a particular ID which sets the RGB LED hue and intensity, allowing all the bus lights to be synchronized.
 
-## Extra for Experts Lab 1.4: Cooperative Multitasking
+## Extra for Experts Lab 2.5: Cooperative Multitasking
 Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using timer-based polling
 
-## Extra for Experts Lab 1.5: Threaded Multitasking
+## Extra for Experts Lab 2.6: Threaded Multitasking
 Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using mbed RTOS
