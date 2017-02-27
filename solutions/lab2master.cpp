@@ -15,6 +15,8 @@ RawSerial serial(P0_8, NC, 115200);
 
 CAN can(P0_28, P0_29);
 
+const uint16_t DEBOUNCE_TIME_MS = 50;
+
 int main() {
   // Start with RGB LED off
   ledR = 1;
@@ -25,6 +27,9 @@ int main() {
   int32_t blinkLengthMs;
   Timer ledTimer;  // used to track blink length
   ledTimer.start();
+
+  bool lastButton = true;
+  Timer buttonDebounceTimer;
 
   // Initialize CAN controller at 1 Mbaud
   can.frequency(1000000);
@@ -41,6 +46,26 @@ int main() {
     }
 
     // System actions
+    bool thisButton = btn;
+    if (thisButton != lastButton) {
+      buttonDebounceTimer.start();
+      if (buttonDebounceTimer.read_ms() >= DEBOUNCE_TIME_MS) {
+        // Actual edge occurs here
+        lastButton = thisButton;
+
+        // Do edge actions
+        if (thisButton == false) {
+          can.write(CANMessage(0x42));
+        }
+      }
+    }
+    if (thisButton == lastButton) {
+      // This also gets triggered on a fresh edge.
+      buttonDebounceTimer.stop();
+      buttonDebounceTimer.reset();
+    }
+
+
     if (ledTimer.read_ms() >= blinkLengthMs) {
       led2 = 0;
     }
