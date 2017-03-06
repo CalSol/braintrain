@@ -6,6 +6,15 @@ env.ConfigureMbedTarget('LPC1549', File('mbed/targets/targets.json').srcnode())
 # Build the mbed library as a static library
 mbed_paths = env.GetMbedSourceDirectories('mbed')
 env.Append(CPPPATH=[x.srcnode() for x in mbed_paths])  # this allows duplicate=0
+
+rtos_paths = [
+  Dir('mbed/rtos'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3/TOOLCHAIN_GCC'),
+]
+env.Append(CPPPATH=[x.srcnode() for x in rtos_paths])  # this allows duplicate=0
+
 env['MBED_LINKSCRIPT'] = env.GetMbedLinkscript(mbed_paths)
 env.Append(CPPDEFINES=[
     'MBED_CONF_PLATFORM_STDIO_BAUD_RATE=115200',
@@ -13,13 +22,17 @@ env.Append(CPPDEFINES=[
     'MBED_CONF_PLATFORM_STDIO_FLUSH_AT_EXIT==1',
     'MBED_CONF_PLATFORM_STDIO_CONVERT_NEWLINES=0'
 ])
-           
+
 env_mbed = env.Clone()
 env_mbed.Append(CCFLAGS='-w')  # don't care about errors in dependencies
 mbed_sources = env.GetMbedSources(mbed_paths)
 mbed_sources.remove(File('mbed/targets/TARGET_NXP/TARGET_LPC15XX/device/system_LPC15xx.c'))
 mbed_sources.append(File('common/lpc15xx_overrides/system_LPC15xx.c'))
 mbed_lib = env_mbed.StaticLibrary('mbed', mbed_sources)
+
+rtos_sources = env.GetMbedSources(rtos_paths)
+rtos_lib = env_mbed.StaticLibrary('rtos', rtos_sources)
+env.Prepend(LIBS=rtos_lib)
 
 env.Append(LINKFLAGS=[
   '-Wl,--whole-archive',  # used to compile mbed HAL, which uses funky weak symbols
