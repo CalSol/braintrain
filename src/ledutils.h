@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#include "mbed.h"
+
 /* Converts H (degrees, [0, 360)), S, V (in [0, 1]), to R, G, B (all in [0, 1])
  */
 void hsv_to_rgb_float(float h_deg, float s, float v,
@@ -20,6 +22,7 @@ void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
 /* Common-anode RGB LED controlled by PWM, with fixed-point options.
  */
 class RGBPwmOut {
+public:
   RGBPwmOut(PinName pinR, PinName pinG, PinName pinB):
     ledR(pinR), ledG(pinG), ledB(pinB) {
     ledR.period_us(PWM_PERIOD_US);
@@ -43,7 +46,7 @@ protected:
 
   PwmOut ledR;
   PwmOut ledG;
-  PwmOut b;
+  PwmOut ledB;
 };
 
 #endif /* LEDUTILS_H_ */

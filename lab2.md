@@ -122,7 +122,9 @@ can.write(CANMessage(0x42));
 Have your edge detection code execute the above on a button press, and you should be done. Feel free to compare against the [solution](solutions/lab2.2.cpp), too.
 
 ## Lab 2.3: CAN Messages with Data
+When the master node receives a CAN message with ID 0x41, it will pulse its white LED with a length specified by the data field, in milliseconds. The blink length is the first 16-bit integer in the payload, in [big-endian (network order)](https://en.wikipedia.org/wiki/Endianness#Networking) format.
 
+**Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node at some interesting amount of time (not 250ms as the last lab).
 
 ## Lab 2.4: Receiving CAN Messages
 Receive a regularly-sent message with a particular ID which sets the RGB LED hue and intensity, allowing all the bus lights to be synchronized.
