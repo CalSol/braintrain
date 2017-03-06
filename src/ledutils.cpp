@@ -52,3 +52,47 @@ void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
   *g_out = *g_out + m;
   *b_out = *b_out + m;
 }
+
+void hsv_to_rgb_pwm_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
+    uint16_t *r_out, uint16_t *g_out, uint16_t *b_out) {
+  uint16_t C = (uint32_t)v * s / 65535;
+  int32_t h_millipct = (((int32_t)h_cdeg * 10 / 60) % 2000) - 1000;  // 1000x
+  uint16_t X = C * (1000 - abs(h_millipct)) / 1000;
+  uint16_t m = v - C;
+
+  h_cdeg = h_cdeg % 36000;
+
+  uint16_t r, g, b;
+  if (0 <= h_cdeg && h_cdeg < 6000) {
+    r = C;  g = X;  b = 0;
+  } else if (6000 <= h_cdeg && h_cdeg < 12000) {
+    r = X;  g = C;  b = 0;
+  } else if (12000 <= h_cdeg && h_cdeg < 18000) {
+    r = 0;  g = C;  b = X;
+  } else if (18000 <= h_cdeg && h_cdeg < 24000) {
+    r = 0;  g = X;  b = C;
+  } else if (24000 <= h_cdeg && h_cdeg < 30000) {
+    r = X;  g = 0;  b = C;
+  } else {  // 300 <= H < 360
+    r = C;  g = 0;  b = X;
+  }
+
+  r = r + m;
+  g = g + m;
+  b = b + m;
+
+  // Square intensity to account for human perceived brightness.
+  r = (uint32_t)r * r / 65535;
+  g = (uint32_t)g * g / 65535;
+  b = (uint32_t)b * b / 65535;
+
+  // Invert polarity to account for common-anode LED (emits light when pin is low).
+  r = 65535 - r;
+  g = 65535 - g;
+  b = 65535 - b;
+
+  // Write outputs.
+  *r_out = r;
+  *g_out = g;
+  *b_out = b;
+}
