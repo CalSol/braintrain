@@ -2,9 +2,7 @@
 
 #include "ledutils.h"
 
-PwmOut ledR(P0_5);
-PwmOut ledG(P0_6);
-PwmOut ledB(P0_7);
+RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
 
 DigitalOut led1(P0_3);
 DigitalOut led2(P0_9);
@@ -19,11 +17,6 @@ const uint16_t DEBOUNCE_TIME_MS = 50;
 const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
 
 int main() {
-  // Start with RGB LED off
-  ledR = 1;
-  ledG = 1;
-  ledB = 1;
-
   // LED Blink State
   int32_t blinkLengthMs;
   Timer ledTimer;  // used to track blink length
@@ -84,13 +77,7 @@ int main() {
       hue += RGB_LED_UPDATE_MS * 10;
       hue = hue % 36000;  // 360 degree * 100
 
-      uint16_t r, g, b;
-      hsv_to_rgb_pwm_uint16(hue, 65535, 65535, &r, &g, &b);
-
-      // Set outputs.
-      ledR.pulsewidth_us((uint32_t)r * 500 / 65535);
-      ledG.pulsewidth_us((uint32_t)g * 500 / 65535);
-      ledB.pulsewidth_us((uint32_t)b * 500 / 65535);
+      rgbLed.hsv_uint16(hue, 65535, 65535);
 
       // Update CAN with new hue.
       uint8_t data[2];
