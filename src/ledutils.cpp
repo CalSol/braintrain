@@ -53,8 +53,7 @@ void hsv_to_rgb_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
   *b_out = *b_out + m;
 }
 
-void hsv_to_rgb_pwm_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
-    uint16_t *r_out, uint16_t *g_out, uint16_t *b_out) {
+void RGBPwmOut::hsv_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v) {
   uint16_t C = (uint32_t)v * s / 65535;
   int32_t h_millipct = (((int32_t)h_cdeg * 10 / 60) % 2000) - 1000;  // 1000x
   uint16_t X = C * (1000 - abs(h_millipct)) / 1000;
@@ -92,7 +91,7 @@ void hsv_to_rgb_pwm_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v,
   b = 65535 - b;
 
   // Write outputs.
-  *r_out = r;
-  *g_out = g;
-  *b_out = b;
+  ledR.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
+  ledG.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
+  ledB.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
 }
