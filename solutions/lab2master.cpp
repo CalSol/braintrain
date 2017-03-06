@@ -39,7 +39,7 @@ int main() {
       if (msg.id == 0x42) {
         led2 = 1;
         ledTimer.reset();
-        blinkLengthMs = 250;
+        blinkLengthMs = 500;
       } else if (msg.id == 0x41) {
         led2 = 1;
         ledTimer.reset();
