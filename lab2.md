@@ -52,7 +52,7 @@ TODO: ckt diagram
 In the example code skeletons, replace `RXD_PIN` and `TXD_PIN` with the appropriate pin name (like `P0_28`). Note that the example solutions use `P0_28` for RXD and `P0_29` for TXD.
 
 ## Lab 2.2: Sending CAN Messages
-The master node is configured to pulse its white LED on for 0.25 seconds when receiving a CAN message with ID 0x42.
+The master node is configured to pulse its LED on for 0.5 seconds when receiving a CAN message with ID 0x42.
 
 **Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node.
 
@@ -122,9 +122,9 @@ can.write(CANMessage(0x42));
 Have your edge detection code execute the above on a button press, and you should be done. Feel free to compare against the [solution](solutions/lab2.2.cpp), too.
 
 ## Lab 2.3: CAN Messages with Data
-When the master node receives a CAN message with ID 0x41, it will pulse its white LED with a length specified by the data field, in milliseconds. The blink length is the first 16-bit integer in the payload, in [big-endian (network order)](https://en.wikipedia.org/wiki/Endianness#Networking) format.
+When the master node receives a CAN message with ID 0x41, it will pulse its LED with a length specified by the data field, in milliseconds. The blink length is the first 16-bit integer in the payload, in [big-endian (network order)](https://en.wikipedia.org/wiki/Endianness#Networking) format.
 
-**Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node at some interesting amount of time (not 250ms as the last lab).
+**Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node at some interesting amount of time (not 500ms as the last lab).
 
 `CANMessage` has another constructor:
 
@@ -176,7 +176,7 @@ Start by declaring a RGB LED object. For convenience, a `RGBPwmLed` object has b
 RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
 ```
 
-It has one API function, which sets the R, G, B PWM outputs using a input H, S, V. The hue is specified in centi-degrees [0, 36000), while the saturation and value are specified in 16-bit fixed point [0, 65535].
+It has one API function, which sets the R, G, B PWM outputs using an input H, S, V. The hue is specified in centi-degrees [0, 36000), while the saturation and value are specified in 16-bit fixed point [0, 65535].
 
 ```c++
 RGBPwmOut::hsv_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v);
@@ -217,7 +217,44 @@ The master node broadcasts its hue, in centi-degrees, as a 16-bit integer in the
 Once you're done, you can compare against the [reference solution](solutions/lab2.4.cpp).
 
 ## Extra for Experts Lab 2.5: Cooperative Multitasking
-Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using timer-based polling
+A microcontroller that can only do one thing is quite limiting, so let's put together the push-to-blink functionality (lab 2.2), the RGB LED hue update functionality (lab 2.4), and also the master LED pulse functionality. Note that the master code is set up such with the functionality in lab 2.2, where a button press causes it to send a CAN message with id=0x42.
+
+**Objective**: Upon receiving a CAN message with id=0x42, have your BRAIN pulse an LED on for 0.5s. While also updating the RGB LED hue from remote messages and sending a CAN message on a button press.
+
+### The Deceptively Simple Way
+
+The simplest way would be to add another message handler in the `can.read(msg)` loop:
+
+```c++
+CANMessage msg;
+while (can.read(msg)) {
+  if (msg.id == 0x43) {
+    // hue code here
+  } else if (msg.id == 0x42) {
+    led2 = 1;
+    wait(0.5);
+    led2 = 0;
+  }
+}
+```
+
+Try it, and it works, but only kind of. The problem is that the `wait` is blocking - it doesn't return, so the system can't do other things (like update the RGB LED hue from received CAN messages or detect button presses). This is noticeable: during the LED pulse time, the RGB LED hue will freeze, then jump to the newest received value. Obviously, this looks bad, and this _is_ bad.
+
+### The Robust Way
+Most microcontrollers have built-in timer peripherals (essentially counters that tick in the background, independently of what the CPU is doing) and can be queried for the current count. mbed provides the `Timer` class as a hardware abstraction layer. A `Timer` has these operations:
+- `Timer::start()`: starts the timer. Timers start off (not ticking).
+- `Timer::reset()`: resets the passed time to 0. Does not change start / stopped state.
+- `Timer::stop()`: self-explanatory.
+- `Timer::read()`: reads the passed time, in seconds, as a float.
+- `Timer::read_ms()`, `Timer::read_us()`: reads the passed time as an integer.
+
+Given that, we could restructure our code so that upon receiving the LED pulse message, the LED is turned on and a timer is started and reset. Then, regularly in the main loop, the timer is read and compared against the threshold time (500 ms here). Once it goes over the threshold, the LED is turned off. Since no blocking operations are performed, the RGB LED hue will continue updating while the LED is on.
+
+This style is called _cooperative multitasking_ because the different tasks must co-operate and yield control to other tasks regularly. For example, when we have a blocking wait in the deceptively simple method, the LED pulsing prevented the RGB LED hue from updating. This type of multitasking is simple, explicit (almost nothing going on "behind the scenes"), but also vulnerable to poor code like blocking operations.
+
+Implement the non-blocking pulsing LED, and verify that it works (RGB LED hue continues updating throughout the LED pulse such that you don't see visible hue discontinuities). Once you're done, you can check against the [reference solution](solutions/lab2.5.cpp).
 
 ## Extra for Experts Lab 2.6: Threaded Multitasking
 Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using mbed RTOS
+
+_With great power comes great responsibility_
