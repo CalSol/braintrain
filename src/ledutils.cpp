@@ -92,6 +92,6 @@ void RGBPwmOut::hsv_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v) {
 
   // Write outputs.
   ledR.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
-  ledG.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
-  ledB.pulsewidth_us((uint32_t)r * PWM_PERIOD_US / 65535);
+  ledG.pulsewidth_us((uint32_t)g * PWM_PERIOD_US / 65535);
+  ledB.pulsewidth_us((uint32_t)b * PWM_PERIOD_US / 65535);
 }

@@ -18,16 +18,12 @@ const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
 
 int main() {
   // LED Blink State
-  int32_t blinkLengthMs;
+  int32_t blinkLengthMs = 0;
   Timer ledTimer;  // used to track blink length
   ledTimer.start();
 
   bool lastButton = true;
   Timer buttonDebounceTimer;
-
-  ledR.period_us(500);
-  ledG.period_us(500);
-  ledB.period_us(500);
 
   uint16_t hue = 0;
   Timer rgbLedTimer;
@@ -42,8 +38,12 @@ int main() {
     while (can.read(msg)) {
       if (msg.id == 0x42) {
         led2 = 1;
-        blinkLengthMs = 250;
         ledTimer.reset();
+        blinkLengthMs = 250;
+      } else if (msg.id == 0x41) {
+        led2 = 1;
+        ledTimer.reset();
+        blinkLengthMs = (msg.data[0] << 8) | msg.data[1];
       }
     }
 
@@ -77,7 +77,7 @@ int main() {
       hue += RGB_LED_UPDATE_MS * 10;
       hue = hue % 36000;  // 360 degree * 100
 
-      rgbLed.hsv_uint16(hue, 65535, 65535);
+      rgbLed.hsv_uint16(hue, 65535, 32767);
 
       // Update CAN with new hue.
       uint8_t data[2];
