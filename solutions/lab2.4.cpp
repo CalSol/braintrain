@@ -22,7 +22,7 @@ int main() {
     while (can.read(msg)) {
       if (msg.id == 0x43) {
         uint16_t hue = (msg.data[0] << 8) | (msg.data[1] << 0);
-        rgbLed.hsv_uint16(hue, 65535, 65535);
+        rgbLed.hsv_uint16(hue, 65535, 32767);
       }
     }
   }

@@ -126,8 +126,95 @@ When the master node receives a CAN message with ID 0x41, it will pulse its whit
 
 **Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node at some interesting amount of time (not 250ms as the last lab).
 
+`CANMessage` has another constructor:
+
+```c++
+CANMessage(int _id, const char *_data, char _len = 8, CANType _type = CANData, CANFormat _format = CANStandard)
+```
+
+For the purposes of this lab, you only need to consider the first 3 arguments, which specify the ID, payload, and payload length. Your goal will be to pack a 16-bit integer into the byte-oriented payload field. First, start by declaring the blink length (in this example, 1000 ms = 1 second):
+
+```c++
+uint16_t blinkLengthMs = 1000;
+```
+
+Then, declare a 2-byte vector to store the re-packed payload:
+
+```c++
+uint8_t data[2];
+```
+
+Pack the data from `blinkLengthMs` into `data`, one byte at a time. Usually, this is accomplished by shifting the 8 bits to be packed into the leasy significant byte, then masking out the other bytes. For example, to get bits 15...8, we would write:
+
+```c++
+data[0] = (blinkLengthMs >> 8) & 0xff;
+```
+
+This right shifts blinkLengthMs by 8, so that bits 15...8 are now in bits 7...0. The masking isn't really necessary for a 16-bit integer, but would be if you were taking a byte in the middle of a larger (32-bit, for example) integer.
+
+After you've packed `data[1]`, you can construct the CAN message and send it. A convenient one-liner is:
+
+```c++
+can.write(CANMessage(0x41, (char*)data, 2));
+```
+
+This creates a CAN message with id=0x41 and payload with 2 bytes from `data`. Note that the CANMessage API inexplicably takes in a `char*` (rather than an `unsigned char*` or `uint8_t*` type, so the `(char*)` cast is required.
+
+Run it, press the button, and check that the master pulses its LED for the duration you programmed. A [reference solution](solutions/lab2.3.cpp) is also available for the curious.
+
 ## Lab 2.4: Receiving CAN Messages
-Receive a regularly-sent message with a particular ID which sets the RGB LED hue and intensity, allowing all the bus lights to be synchronized.
+You may notice that the master node is constantly cycling the hue of its RGB LED. It also broadcasts the RGB LED's hue regularly, allowing other nodes to synchronize with it.
+
+**Objective**: Have your BRAIN's RGB LED track and mimic the master's RGB LED.
+
+_Note: you may think another way to accomplish this objective is to run both nodes open-loop, but starting both at the same time. The reason this does not work well is because of clock drift: since each node has its own (non-synchronized) clock source, the timing will be slightly off and their hues will drift. While the crystals on the BRAINs provide good frequency tolerance and stability, they will still de-synchronize over long periods of time._
+
+### RGB LED Helper
+Start by declaring a RGB LED object. For convenience, a `RGBPwmLed` object has been provided in the `ledutils.h` header. Instantiate one as follows:
+
+```c++
+RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
+```
+
+It has one API function, which sets the R, G, B PWM outputs using a input H, S, V. The hue is specified in centi-degrees [0, 36000), while the saturation and value are specified in 16-bit fixed point [0, 65535].
+
+```c++
+RGBPwmOut::hsv_uint16(uint16_t h_cdeg, uint16_t s, uint16_t v);
+```
+
+### Reading from CAN
+Messages can be read from a CAN object using `CAN::read(CANMessage&)`. If there was a message pending, the function returns 1 and stores the message in the input (reference) argument. If there was no message pending, the function return 0.
+
+> In lab1, you learned about pointers. C++ also has _reference_ types, denoted with `&`, which act like pointers but use value notation. You can see its use in `CAN::read`, allowing the function to return both a read status (as its return value) and a message.
+>
+> Note: some style guides discourage the use of references as output values, preferring to use pointer notation to make it explicit that an argument may be overwritten.
+
+A common structure for checking for messages is:
+
+```c++
+CANMessage msg;
+while (can.read(msg)) {
+  // do something based on the received message
+}
+```
+
+> `CANMessage` (of type `CAN_Message`) has the structure:
+>
+> ```c++
+> struct CAN_Message {
+>     unsigned int   id;                 // 29 bit identifier
+>     unsigned char  data[8];            // Data field
+>     unsigned char  len;                // Length of data field in bytes
+>     CANFormat      format;             // 0 - STANDARD, 1- EXTENDED IDENTIFIER
+>     CANType        type;               // 0 - DATA FRAME, 1 - REMOTE FRAME
+> };
+> ```
+>
+> For this lab, we'll only consider `id`, and `data`.
+
+The master node broadcasts its hue, in centi-degrees, as a 16-bit integer in the payload of a CAN message with id=0x43. You will have to unpack the byte-oriented data from the CAN message into a 16-bit hue (essentially using the opposite process in lab 2.3) and write it to the hue of the RGB LED. Use saturation = 65535 and value (brightness) = 32767. Don't forget that the hue should only be changed upon receiving a message with id=0x43 - there may be other network traffic on the CAN network.
+
+Once you're done, you can compare against the [reference solution](solutions/lab2.4.cpp).
 
 ## Extra for Experts Lab 2.5: Cooperative Multitasking
 Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using timer-based polling
