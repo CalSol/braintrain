@@ -222,7 +222,6 @@ A microcontroller that can only do one thing is quite limiting, so let's put tog
 **Objective**: Upon receiving a CAN message with id=0x42, have your BRAIN pulse an LED on for 0.5s. While also updating the RGB LED hue from remote messages and sending a CAN message on a button press.
 
 ### The Deceptively Simple Way
-
 The simplest way would be to add another message handler in the `can.read(msg)` loop:
 
 ```c++
@@ -255,6 +254,216 @@ This style is called _cooperative multitasking_ because the different tasks must
 Implement the non-blocking pulsing LED, and verify that it works (RGB LED hue continues updating throughout the LED pulse such that you don't see visible hue discontinuities). Once you're done, you can check against the [reference solution](solutions/lab2.5.cpp).
 
 ## Extra for Experts Lab 2.6: Threaded Multitasking
-Pulse a LED on for a second (or so) when a message is received, while doing all of Lab 2.2 and 2.3, using mbed RTOS
+_While we currently don't use threading in our codebase, it's still a common programming model and is worthwhile to learn its features and pitfalls._
 
-_With great power comes great responsibility_
+While cooperative multitasking accomplished our goals, it did so by spreading code around - for example, while we would interpret the LED blink as a logical unit, it actually ended up separated into two phases. In this section, we will explore a different approach to multitasking: threading and operating systems.
+
+**Objective**: Lab 2.5, but using the mbed RTOS.
+
+> A _thread_ is a sequence of instructions in a program. In the examples above, the entire program consisted of one thread, `main()`. However, with a _scheduler_ (a typical component in an _operating system_), it is possible to run multiple threads at once - typically, the scheduler interleaves the threads in time onto one processor. Across threads within a process, resources like memory are shared.
+>
+> There are many different models of communications between threads. The simplest, but most dangerous, is by manipulating shared memory. More structured communications channels are also available, like locks, semaphores, and queues. In this section, we will focus on queues as they are a robust while conceptually simple channel.
+>
+> A _real-time operating system_ is an operating system that attempts to meet real-time constraints, generally prioritizing latency over throughput. There are two types: _hard real-time_ systems are guaranteed to meet task deadlines, while _soft real-time_ systems provide no such guarantees. The mbed RTOS consists of a task scheduler but provides no task deadline guarantees (or even any static timing analysis capability), and is a soft real-time system.
+>
+> Multitasking in general is a hard problem, and this tutorial only covers the very basics.
+
+While the RTOS library has been included in the standard build, we haven't used it ... until now. Let's start by structuring our threads:
+- the `main` thread will handle CAN communications, dispatching notifications to other threads based on received data
+- a LED thread will blink the LED upon receiving a notification
+- a button thread will notify the CAN thread to transmit a message
+
+Start by including the RTOS header:
+```c++
+#include "rtos.h"
+```
+
+Then, declare two [`Thread`](https://developer.mbed.org/handbook/RTOS#thread) objects (note: `main` is implicitly its own thread):
+
+```c++
+Thread ledThread;
+Thread buttonThread;
+```
+
+Each Thread will run a function, the skeletons of which are provided:
+
+```c++
+void led_thread() {
+  while (true) {
+    // TODO: pulse LED upon receiving notification
+  }
+}
+
+void button_thread() {
+  bool lastButton = true;
+  while (true) {
+    bool thisButton = btn;
+    if (thisButton != lastButton && btn == 0) {
+      // TODO: enqueue a CAN message with id=0x42 for transmission upon button press
+    }
+    lastButton = thisButton;
+
+    Thread::wait(5);
+  }
+}
+```
+
+One important note is the use of `Thread::wait(uint32_t millisec)`, as opposed to bare `wait`. `Thread::wait` de-schedules the thread (allowing other threads to run as it is waiting), as opposed to spinning (which takes up compute resources doing nothing). As the button is sampled sufficiently slowly, there is no need to debounce.
+
+With the `Thread` objects and functions, we are now ready to write our `main` function:
+
+```c++
+int main() {
+  // Initialize CAN controller at 1 Mbaud
+  can.frequency(1000000);
+
+  ledThread.start(led_thread);
+  buttonThread.start(button_thread);
+
+  while (true) {
+    // CAN receive handling
+    CANMessage msg;
+    while (can.read(msg)) {
+      if (msg.id == 0x43) {
+        uint16_t hue = (msg.data[0] << 8) | (msg.data[1] << 0);
+        rgbLed.hsv_uint16(hue, 65535, 32767);
+      } else if (msg.id == 0x42) {
+        // TODO: notify the LED thread to pulse the LED
+      }
+    }
+
+    // CAN transmit handling
+    // TODO: transmit CAN messages
+
+    Thread::yield();
+  }
+}
+```
+
+You'll notice two new constructs here:
+- `Thread::start(*fn)` starts a `Thread` object at a given function. From then on, the argument function and the calling thread will run in parallel.
+- `Thread::yield()` "yields" the current thread, allowing other threads a chance to run. While the operating system will pre-empt (and switch to another thread) if one thread has been running for too long, proactively yielding when a thread has no more work (for example, waiting on input when polling) is good practice.
+
+Next, define the two communication channels. One will be a queue of pulse times for the LED, and another will be a queue of CAN messages to transmit:
+
+```c++
+Mail<CANMessage, 16> canTransmitQueue;
+Mail<uint16_t, 1> ledQueue;
+```
+
+[`Mail`](https://developer.mbed.org/handbook/RTOS#mail) is a queue that stores elements (not to be confused with [`Queue`](https://developer.mbed.org/handbook/RTOS#queue), which can only store pointers. The first type parameter is the data type that is stored, and the second parameter is the number of elements in the queue. In the example above, `canTransmitQueue` consists of up to 16 elements of type `CANMessage`.
+
+`Mail`'s API is kind of funny:
+- To enqueue an element, you first need to allocate storage space using `Mail::alloc()`, which returns a pointer to an element that you need to initialize. Then, you can actually enqueue the element using `Mail::put(elem)` For example, to enqueue a wait time of 500ms into `ledQueue`:
+
+  ```c++
+  uint16_t* waitTime = ledQueue.alloc(osWaitForever);
+  *waitTime = 500;
+  ledQueue.put(waitTime);
+  ```
+
+  Note: `Mail::alloc()` takes an optional parameter of the maximum time to wait for a free element buffer. In the above, we essentially do a blocking allocation, waiting indefinitely until one is available. If a finite time is passed in, `alloc` can fail and return `NULL`.
+- To dequeue an element, use `osEvent evt = Mail::get()`, which returns an object of type `osEvent`. The object's `status` field indicates the event's meaning, and we are interested in the case when `evt.status == osEventMail`. For a mail event, we can get a pointer to the element using `evt.value.p` followed by a typecast. Remember to `Mail::free()` the pointer when done so the element memory can be re-used. An example for polling and reading `ledQueue` is:
+
+  ```c++
+  osEvent evt = ledQueue.get();
+  if (evt.status == osEventMail) {
+    uint16_t waitTime = *(uint16_t*)evt.value.p;
+    ledQueue.free((uint16_t*)evt.value.p);
+    led2 = 1;
+    Thread::wait(waitTime);
+    led2 = 0;
+  }
+  ```
+
+  You can see that all the LED code is cleanly centralized into one location. Also note that `Mail::get()` takes an optional maximum wait time too, defaulting to forever (essentially blocking until a message is available).
+
+Putting the two above examples together, our full code now looks like:
+
+```c++
+#include "mbed.h"
+#include "rtos.h"
+
+#include "ledutils.h"
+
+RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
+
+DigitalOut led1(P0_3);
+DigitalOut led2(P0_9);
+
+DigitalIn btn(P0_4);
+
+RawSerial serial(P0_8, NC, 115200);
+
+CAN can(P0_28, P0_29);
+
+Mail<CANMessage, 16> canTransmitQueue;
+
+Thread ledThread;
+Mail<uint16_t, 1> ledQueue;
+void led_thread() {
+  while (true) {
+    osEvent evt = ledQueue.get();
+    if (evt.status == osEventMail) {
+      uint16_t waitTime = *(uint16_t*)evt.value.p;
+      ledQueue.free((uint16_t*)evt.value.p);
+      led2 = 1;
+      Thread::wait(waitTime);
+      led2 = 0;
+    }
+  }
+}
+
+Thread buttonThread;
+void button_thread() {
+  bool lastButton = true;
+  while (true) {
+    bool thisButton = btn;
+    if (thisButton != lastButton && btn == 0) {
+      // TODO: enqueue a CAN message with id=0x42 for transmission upon button press
+    }
+    lastButton = thisButton;
+
+    Thread::wait(5);
+  }
+}
+
+int main() {
+  // Initialize CAN controller at 1 Mbaud
+  can.frequency(1000000);
+
+  ledThread.start(led_thread);
+  buttonThread.start(button_thread);
+
+  while (true) {
+    // CAN receive handling
+    CANMessage msg;
+    while (can.read(msg)) {
+      if (msg.id == 0x43) {
+        uint16_t hue = (msg.data[0] << 8) | (msg.data[1] << 0);
+        rgbLed.hsv_uint16(hue, 65535, 32767);
+      } else if (msg.id == 0x42) {
+        uint16_t* waitTime = ledQueue.alloc(osWaitForever);
+        *waitTime = 500;
+        ledQueue.put(waitTime);
+      }
+    }
+
+    // CAN transmit handling
+    // TODO: transmit CAN messages
+
+    Thread::yield();
+  }
+}
+```
+
+Test that it works, that you can simultaneously blink the LED while still updating the RGB LED. Afterwards, fill out the two TODOs in the same style as the LED enqueue / dequeue operations.
+
+Once you've given it a shot, check out the [reference solution](solutions/lab2.6.cpp).
+
+### Discussion
+_With great power comes great responsibility._
+
+Threading provides a different approach than cooperative multitasking, helping to centralize related sequences of instructions but now making the actual instruction execution sequence less predictable. While we used safe inter-thread communications mechanisms above (with `Mail`), the threads actually can read and write each other's memory, and not being careful can lead to subtle, non-deterministic bugs like [race conditions](https://en.wikipedia.org/wiki/Race_condition).
+
+There are also more implementation limitations of the mbed RTOS, like maximum number of threads and predefined stack sizes. One issue hindering debuggability is that when the RTOS fails, it can't give a helpful error message - so another potential pitfall.
