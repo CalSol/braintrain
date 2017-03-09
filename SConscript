@@ -20,13 +20,18 @@ env.Default(env.CalSolFW('brain',
   includes=['src']
 ))
 
+utillib_srcs = Glob('util/*.cpp')
+utillib = env.StaticLibrary('utillib', utillib_srcs)
+
+env.Append(LIBS=utillib)
+
 # Build all solutions
 solutions = Glob('solutions/*.cpp')
 for solution in solutions:
   env.Default(env.CalSolFW(
     os.path.join('solutions', os.path.splitext(solution.name)[0]),
     srcs=[solution],
-    includes=['src']
+    includes=['src', 'util']
   ))
   
 env.Alias('prog', 
