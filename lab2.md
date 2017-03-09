@@ -464,6 +464,18 @@ Once you've given it a shot, check out the [reference solution](solutions/lab2.6
 ### Discussion
 _With great power comes great responsibility._
 
-Threading provides a different approach than cooperative multitasking, helping to centralize related sequences of instructions but now making the actual instruction execution sequence less predictable. While we used safe inter-thread communications mechanisms above (with `Mail`), the threads actually can read and write each other's memory, and not being careful can lead to subtle, non-deterministic bugs like [race conditions](https://en.wikipedia.org/wiki/Race_condition).
+Now that we've implemented the same functionality in both cooperative multitasking and threaded forms, let's compare.
 
-There are also more implementation limitations of the mbed RTOS, like maximum number of threads and predefined stack sizes. One issue hindering debuggability is that when the RTOS fails, it can't give a helpful error message - so another potential pitfall.
+What did we gain with threading?
+- Related sequences of instructions appear as a single unit in code, even if their execution is separated by other threads. This is apparent in the LED pulsing code.
+- The appearance of multitasking without needing to handle the details manually, as with cooperative multitasking.
+- Communication between tasks are made explicit with the use of `Mail` queues.
+
+What pitfalls did we avoid?
+- The use of `Mail` queues provides a principled way to communicate between threads. Threading actually exposes a shared memory model, where threads can read and write each other's memory, and not being careful and methodical can lead to subtle, non-deterministic bugs like [race conditions](https://en.wikipedia.org/wiki/Race_condition).
+- The mbed RTOS has implementation limitations, like maximum number of threads and predefined maximum stack size. While this trivial example stayed within the limits, the RTOS isn't always able to produce a helpful error message on failure, making debugging painful.
+
+What did we lose with threading?
+- The actual execution behavior of the RTOS isn't predictable, especially with regards to very fine (milliseconds) timing. While the thread scheduler gives the illusion of multiple threads executing simultaneously, the actual thread swapping occurs at human timescales (every few milliseconds) rather than machine timescales.
+
+Overall, threading provides a different approach than cooperative multitasking and can be a powerful tool in certain situations, but only if you're aware of the pitfalls and shortcomings. If you're interested in using threading for your project, do talk to us so we can discuss whether it's appropriate and how to mitigate the potential issues.
