@@ -24,6 +24,33 @@ lab_env.Default(lab_env.CalSolFW('brain',
 util_env = env_lpc1549.Clone()
 util_env.Append(CCFLAGS=['-Wall', '-Werror'])
 
+# Build the USBDevice library as a dependency
+usb_class_dirs = [
+  'mbed/features/unsupported/USBDevice/USBAudio',
+  'mbed/features/unsupported/USBDevice/USBHID',
+  'mbed/features/unsupported/USBDevice/USBMIDI',
+  'mbed/features/unsupported/USBDevice/USBMSD',
+  'mbed/features/unsupported/USBDevice/USBSerial',
+]
+usb_device_dirs = [
+  'mbed/features/unsupported/USBDevice/USBDevice',
+]
+
+# TODO: map targets to the appropriate USBHAL implementation
+usb_srcs = [
+  'mbed/features/unsupported/USBDevice/USBDevice/USBDevice.cpp',
+  'mbed/features/unsupported/USBDevice/USBDevice/USBHAL_LPC11U.cpp',
+]
+
+for path in usb_class_dirs:
+  usb_srcs.extend(Glob(os.path.join(path,'*.cpp')))
+
+usb_dirs = usb_class_dirs + usb_device_dirs
+util_env.Append(CPPPATH=usb_dirs)
+
+usblib = util_env.StaticLibrary('usbdevice', usb_srcs)
+
+util_env.Append(LIBS=usblib)
 util_env.Append(LIBS=supportlib)
 
 util_env.Default(
