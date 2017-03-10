@@ -1,40 +1,48 @@
-import os.path
+import os, os.path
 
 Import('env_lpc1549')
 
-env = env_lpc1549.Clone()
+# Environment for building projects for labs
+lab_env = env_lpc1549.Clone()
 
-env.Append(CCFLAGS=['-Wall', '-Werror'])
+lab_env.Append(CCFLAGS=['-Wall', '-Werror'])
 
 # Separately build main.cpp and supporting code, so that the supporting code can
 # be shared with solution compilation
 main_all = Glob('src/*.cpp')
 main_srcs = [elt for elt in main_all if elt.name == 'main.cpp']
-mainlibs_srcs = [elt for elt in main_all if elt not in main_srcs]
+support_srcs = [elt for elt in main_all if elt not in main_srcs]
 
-mainlibs = env.StaticLibrary('mainlibs', mainlibs_srcs)
-env.Append(LIBS=mainlibs)
+supportlib = lab_env.StaticLibrary('mainlibs', support_srcs)
+lab_env.Append(LIBS=supportlib)
 
-env.Default(env.CalSolFW('brain',
+lab_env.Default(lab_env.CalSolFW('brain',
   srcs=main_srcs,
   includes=['src']
 ))
 
-utillib_srcs = Glob('util/*.cpp')
-utillib = env.StaticLibrary('utillib', utillib_srcs)
+util_env = env_lpc1549.Clone()
+util_env.Append(CCFLAGS=['-Wall', '-Werror'])
 
-env.Append(LIBS=utillib)
+util_env.Append(LIBS=supportlib)
+
+util_env.Default(
+  util_env.CalSolFW('util/lab2slcan',
+    srcs=Glob('util/*.cpp'),
+    includes=['util','src']
+  )
+)
 
 # Build all solutions
 solutions = Glob('solutions/*.cpp')
 for solution in solutions:
-  env.Default(env.CalSolFW(
+  lab_env.Default(lab_env.CalSolFW(
     os.path.join('solutions', os.path.splitext(solution.name)[0]),
     srcs=[solution],
-    includes=['src', 'util']
+    includes=['src']
   ))
   
-env.Alias('prog', 
-  env.Command('openocd', 'brain.elf', 
+lab_env.Alias('prog', 
+  lab_env.Command('openocd', 'brain.elf', 
     'openocd -f interface/cmsis-dap.cfg -f lpc1549_openocd.cfg -c init -c "reset halt" -c "flash erase_sector 0 0 last" -c "flash write_image $SOURCE" -c "reset run" -c "exit"'
 ))
