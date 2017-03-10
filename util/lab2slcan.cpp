@@ -11,10 +11,10 @@ DigitalOut led2(P0_9);
 
 DigitalIn btn(P0_4);
 
-BufferedRXSerial<64> serial(P0_8, NC, 115200);
+USBSerial serial(0x1209, 0x0001, 0x0001, false);
 
 CAN can(P0_28, P0_29);
-SerialSLCANSlave slcan(serial);
+USBSLCANSlave slcan(serial);
 
 const uint16_t DEBOUNCE_TIME_MS = 50;
 const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
@@ -24,7 +24,9 @@ static bool transmitCANMessage(const CANMessage& msg) {
   if (can.write(msg) == 1) {
     // Echo anything that at least made it to the CAN controller
     // This does not imply that the message was acknowledged.
-    slcan.putCANMessage(msg);
+    if (serial.configured()) {
+      slcan.putCANMessage(msg);
+    }
     return true;
   }
   return false;
@@ -109,6 +111,10 @@ int main() {
     }
 
     // Process SLCAN commands and report CAN messages
-    slcan.update();
+    if (serial.configured()) {
+      slcan.update();
+    } else {
+      serial.connect(false);
+    }
   }
 }
