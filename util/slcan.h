@@ -1,11 +1,7 @@
-/* SLCAN/CAN-USB protocol compatible CAN debugging interface */
-
 #ifndef SLCAN_H_
 #define SLCAN_H_
 
 #include <mbed.h>
-#include <CircularBuffer.h>
-#include <Callback.h>
 
 class SLCANBase {
 public:
@@ -34,66 +30,63 @@ protected:
     static size_t commandResponseLength(const char* command);
     bool execCommand(const char* command, char* response=NULL);
 
+    template <typename StreamType>
+    bool readCommand(StreamType& stream);
+
+    bool commandQueued;
+    char inputCommandBuffer[32];
+    
 private:
     bool execConfigCommand(const char* command);
     bool execTransmitCommand(const char* command, char* response);
     bool execDiagnosticCommand(const char *command, char* response);
-};
-
-class SerialSLCANBase : public SLCANBase {
-protected:
-    SerialSLCANBase(RawSerial& stream);
-    virtual bool setBaudrate(int baudrate) = 0;
-    virtual bool setMode(CAN::Mode mode) = 0;
-    virtual bool transmitMessage(const CANMessage& msg) = 0;
-
-    virtual bool processCommands();
-    virtual bool processCANMessages();
-    virtual bool flush();
-
-    // To be implemented by subclasses
-    virtual bool getNextCANMessage(CANMessage& msg) = 0;
-private:
-    RawSerial& stream;
-    bool commandQueued;
+    
     bool commandOverflow;
-    char inputCommandBuffer[32];
     size_t inputCommandLen;
 };
 
-class SerialSLCANMaster : public SerialSLCANBase {
-public:
-    SerialSLCANMaster(RawSerial& stream, CAN& can);
+/* Read and buffer one command if possible */
+/* This really shouldn't need to be templatized, but there's no
+   common interface base class between USBSerial and RawSerial... */
+template <typename StreamType>
+bool SLCANBase::readCommand(StreamType& stream) {
+    bool active = false;
+    while (!commandQueued && stream.readable()) {
+        char c = (char)stream.getc();
+        if (c == '\r') {
+            if (commandOverflow) {
+                // Replace with a dummy invalid command so we return an error
+                inputCommandBuffer[0] = '!';
+                inputCommandBuffer[1] = '\0';
+                inputCommandLen = 0;
+                commandOverflow = false;
+                active = true;
+            } else {
+                // Null-terminate the buffered command
+                inputCommandBuffer[inputCommandLen] = '\0';
+                //stream.puts(inputCommandBuffer);
+                inputCommandLen = 0;
+                active = true;
+            }
+            commandQueued = true;
+        } else if (c == '\n' && inputCommandLen == 0) {
+            // Ignore line feeds immediately after a carriage return
+        } else if (commandOverflow) {
+            // Swallow the rest of the command when overflow occurs
+        } else {
+            // Append to the end of the command
+            inputCommandBuffer[inputCommandLen++] = c;
 
-protected:
-    virtual bool setBaudrate(int baudrate);
-    virtual bool setMode(CAN::Mode mode);
-    virtual bool transmitMessage(const CANMessage& msg);
-    virtual bool getNextCANMessage(CANMessage& msg);
-private:
-    CAN& can;
-};
+            if (inputCommandLen >= sizeof(inputCommandBuffer)) {
+                commandOverflow = true;
+            }
+        }
+    }
 
-class SerialSLCANSlave : public SerialSLCANBase {
-public:
-    SerialSLCANSlave(RawSerial& stream);
+    return active;
+}
 
-    bool putCANMessage(const CANMessage& msg);
-    void setIgnoreConfigCommands(bool ignore);
-    void setBaudrateHandler(Callback<bool(int baudrate)> callback);
-    void setModeHandler(Callback<bool(CAN::Mode mode)> callback);
-    void setTransmitHandler(Callback<bool(const CANMessage& msg)> callback);
-protected:
-    virtual bool setBaudrate(int baudrate);
-    virtual bool setMode(CAN::Mode mode);
-    virtual bool transmitMessage(const CANMessage& msg);
-    virtual bool getNextCANMessage(CANMessage& msg);
-private:
-    CircularBuffer<CANMessage, 8, uint8_t> messageBuffer;
-    Callback<bool(int baudrate)> cbSetBaudrate;
-    Callback<bool(CAN::Mode mode)> cbSetMode;
-    Callback<bool(const CANMessage& msg)> cbTransmitMessage;
-    bool ignoreConfigCommands;
-};
+#include "serial_slcan.h"
+#include "usb_slcan.h"
 
 #endif
