@@ -7,6 +7,9 @@
 #include <Callback.h>
 
 class USBSLCANBase : public SLCANBase {
+public:
+    virtual void reset();
+
 protected:
     USBSLCANBase(NonBlockingUSBSerial& stream);
 
@@ -31,6 +34,7 @@ class USBSLCANSlave : public USBSLCANBase {
 public:
     USBSLCANSlave(NonBlockingUSBSerial& stream);
 
+    virtual void reset();
     bool putCANMessage(const CANMessage& msg);
     void setIgnoreConfigCommands(bool ignore);
     void setBaudrateHandler(Callback<bool(int baudrate)> callback);

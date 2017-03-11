@@ -96,10 +96,22 @@ bool USBSLCANBase::flush() {
     return active;
 }
 
+/* Reset internal buffers because the host disconnected */
+void USBSLCANBase::reset() {
+    outputPacketLen = 0;
+    messageQueued = false;
+}
+
 /* an SLCAN implementation that only accesses the CAN peripheral through callbacks */
 USBSLCANSlave::USBSLCANSlave(NonBlockingUSBSerial& stream)
     : USBSLCANBase(stream),
       ignoreConfigCommands(false) {
+}
+
+/* Reset internal buffers because the host disconnected */
+void USBSLCANSlave::reset() {
+    USBSLCANBase::reset();
+    messageBuffer.reset();
 }
 
 /* Configure SLCAN to silently discard mode/baudrate commands */

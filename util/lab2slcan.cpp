@@ -119,6 +119,8 @@ int main() {
     if (serial.configured()) {
       slcan.update();
     } else {
+      // Try reconnecting to the USB host
+      slcan.reset();
       serial.connect(false);
     }
   }
