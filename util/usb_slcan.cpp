@@ -26,14 +26,11 @@ bool USBSLCANBase::processCommands() {
     if (commandQueued) {
         size_t responseLength = commandResponseLength(inputCommandBuffer);
         if ((outputPacketLen + responseLength) <= sizeof(outputPacketBuffer)) {
-            char outputResponseBuffer[32];
-            outputResponseBuffer[0] = '\0';
-            if (execCommand(inputCommandBuffer, outputResponseBuffer)) {
+            char* packetTail = &outputPacketBuffer[outputPacketLen];
+            if (execCommand(inputCommandBuffer, packetTail)) {
                 // Success
-                for (char* s = outputResponseBuffer; *s != '\0'; s++) {
-                    outputPacketBuffer[outputPacketLen++] = *s;
-                }
-                outputPacketBuffer[outputPacketLen++] = '\r';
+                packetTail[responseLength-1] = '\r';
+                outputPacketLen += responseLength;
             } else {
                 // Failure
                 outputPacketBuffer[outputPacketLen++] = '\a';

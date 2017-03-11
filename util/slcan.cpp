@@ -171,10 +171,6 @@ size_t SLCANBase::commandResponseLength(const char* command) {
 
 bool SLCANBase::execCommand(const char* command, char* response) {
     bool success = false;
-    if (response) {
-        response[0] = '\0';
-    }
-
     switch (command[0]) {
         // Configuration commands
         case 'S':
@@ -336,10 +332,8 @@ bool SLCANBase::execTransmitCommand(const char* command, char* response) {
     if (validMessage) {
         if (command[0] == 'T' || command[0] == 'R') {
             response[0] = 'Z';
-            response[1] = '\0';
         } else if (command[0] == 't' || command[0] == 'r') {
             response[0] = 'z';
-            response[1] = '\0';
         }
         success = transmitMessage(msg);
     }
@@ -375,7 +369,6 @@ bool SLCANBase::execDiagnosticCommand(const char* command, char* response) {
             response[2] = format_nibble(hwVersion >> 0);
             response[3] = format_nibble(fwVersion >> 4);
             response[4] = format_nibble(fwVersion >> 0);
-            response[5] = '\0';
             break;
         }
         case 'v': {
@@ -384,23 +377,26 @@ bool SLCANBase::execDiagnosticCommand(const char* command, char* response) {
             response[0] = 'v';
             response[1] = format_nibble(fwVersion >> 4);
             response[2] = format_nibble(fwVersion >> 0);
-            response[3] = '\0';
             break;
         }
         case 'N': {
             success = true;
             const char* serial = getSerialString();
-            size_t index = 0;
-            response[index++] = 'N';
-            for (int i=0; i < 4; i++) {
+            response[0] = 'N';
+            int i;
+            for (i=0; i < 4; i++) {
                 char c = serial[i];
                 if (c == '\0') {
                     break;
                 } else {
-                    response[index++] = c;
+                    response[i+1] = c;
                 }
             }
-            response[index] = '\0';
+
+            // Pad the serial with spaces if it's short
+            for (; i < 4; i++) {
+                response[i+1] = ' ';
+            }
             break;
         }
         case 'F': {
@@ -409,7 +405,6 @@ bool SLCANBase::execDiagnosticCommand(const char* command, char* response) {
             response[0] = 'F';
             response[1] = format_nibble(status >> 4);
             response[2] = format_nibble(status >> 0);
-            response[3] = '\0';
         }
         case 'W': {
             // Just swallow the MCP2515 register write command

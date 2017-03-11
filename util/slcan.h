@@ -30,7 +30,7 @@ protected:
     static size_t formatCANMessage(const CANMessage& msg, char* buf, size_t max_len);
     static size_t formattedCANMessageLength(const CANMessage& msg);
     static size_t commandResponseLength(const char* command);
-    bool execCommand(const char* command, char* response=NULL);
+    bool execCommand(const char* command, char* response);
     bool readCommand();
     
     bool commandQueued;
