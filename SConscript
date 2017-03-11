@@ -3,9 +3,9 @@ import os, os.path
 Import('env_lpc1549')
 
 # Environment for building projects for labs
-lab_env = env_lpc1549.Clone()
+env = env_lpc1549.Clone()
 
-lab_env.Append(CCFLAGS=['-Wall', '-Werror'])
+env.Append(CCFLAGS=['-Wall', '-Werror'])
 
 # Separately build main.cpp and supporting code, so that the supporting code can
 # be shared with solution compilation
@@ -13,63 +13,32 @@ main_all = Glob('src/*.cpp')
 main_srcs = [elt for elt in main_all if elt.name == 'main.cpp']
 support_srcs = [elt for elt in main_all if elt not in main_srcs]
 
-supportlib = lab_env.StaticLibrary('mainlibs', support_srcs)
-lab_env.Append(LIBS=supportlib)
+supportlib = env.StaticLibrary('mainlibs', support_srcs)
+env.Append(LIBS=supportlib)
 
-lab_env.Default(lab_env.CalSolFW('brain',
+env.Default(env.CalSolFW('brain',
   srcs=main_srcs,
   includes=['src']
 ))
 
-util_env = env_lpc1549.Clone()
-util_env.Append(CCFLAGS=['-Wall', '-Werror'])
+# Build all solutions
+solutions = Glob('solutions/*.cpp')
+for solution in solutions:
+  env.Default(env.CalSolFW(
+    os.path.join('solutions', os.path.splitext(solution.name)[0]),
+    srcs=[solution],
+    includes=['src']
+  ))
 
-# Build the USBDevice library as a dependency
-usb_class_dirs = [
-  'mbed/features/unsupported/USBDevice/USBAudio',
-  'mbed/features/unsupported/USBDevice/USBHID',
-  'mbed/features/unsupported/USBDevice/USBMIDI',
-  'mbed/features/unsupported/USBDevice/USBMSD',
-  'mbed/features/unsupported/USBDevice/USBSerial',
-]
-usb_device_dirs = [
-  'mbed/features/unsupported/USBDevice/USBDevice',
-]
-
-# TODO: map targets to the appropriate USBHAL implementation
-usb_srcs = [
-  'mbed/features/unsupported/USBDevice/USBDevice/USBDevice.cpp',
-  'mbed/features/unsupported/USBDevice/USBDevice/USBHAL_LPC11U.cpp',
-]
-
-for path in usb_class_dirs:
-  usb_srcs.extend(Glob(os.path.join(path,'*.cpp')))
-
-usb_dirs = usb_class_dirs + usb_device_dirs
-util_env.Append(CPPPATH=usb_dirs)
-
-usblib = util_env.StaticLibrary('usbdevice', usb_srcs)
-
-util_env.Append(LIBS=usblib)
-util_env.Append(LIBS=supportlib)
-
-util_env.Default(
-  util_env.CalSolFW('util/lab2slcan',
+# Build the master node with SLCAN debugging
+env.Default(
+  env.CalSolFW('util/lab2slcan',
     srcs=Glob('util/*.cpp'),
     includes=['util','src']
   )
 )
 
-# Build all solutions
-solutions = Glob('solutions/*.cpp')
-for solution in solutions:
-  lab_env.Default(lab_env.CalSolFW(
-    os.path.join('solutions', os.path.splitext(solution.name)[0]),
-    srcs=[solution],
-    includes=['src']
-  ))
-  
-lab_env.Alias('prog', 
-  lab_env.Command('openocd', 'brain.elf', 
+env.Alias('prog', 
+  env.Command('openocd', 'brain.elf', 
     'openocd -f interface/cmsis-dap.cfg -f lpc1549_openocd.cfg -c init -c "reset halt" -c "flash erase_sector 0 0 last" -c "flash write_image $SOURCE" -c "reset run" -c "exit"'
 ))

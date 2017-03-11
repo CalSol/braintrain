@@ -1,4 +1,6 @@
 # Modifies the environment to build mbed firmware for the LPC1549 using GCC-ARM
+import os, os.path
+
 Import('env')
 
 env.ConfigureMbedTarget('LPC1549', File('mbed/targets/targets.json').srcnode())
@@ -24,6 +26,30 @@ env.Append(CPPDEFINES=[
     'OS_CLOCK=12000000',  # for RTOS
 ])
 
+# Build the USBDevice library as a dependency
+usb_class_dirs = [
+  'mbed/features/unsupported/USBDevice/USBAudio',
+  'mbed/features/unsupported/USBDevice/USBHID',
+  'mbed/features/unsupported/USBDevice/USBMIDI',
+  'mbed/features/unsupported/USBDevice/USBMSD',
+  'mbed/features/unsupported/USBDevice/USBSerial',
+]
+
+usb_device_dirs = [
+  'mbed/features/unsupported/USBDevice/USBDevice',
+]
+
+usb_srcs = [
+  'mbed/features/unsupported/USBDevice/USBDevice/USBDevice.cpp',
+  'mbed/features/unsupported/USBDevice/USBDevice/USBHAL_LPC11U.cpp',
+]
+
+for path in usb_class_dirs:
+  usb_srcs.extend(Glob(os.path.join(path,'*.cpp')))
+
+usb_dirs = usb_class_dirs + usb_device_dirs
+env.Append(CPPPATH=usb_dirs)
+
 env_mbed = env.Clone()
 env_mbed.Append(CCFLAGS='-w')  # don't care about errors in dependencies
 mbed_sources = env.GetMbedSources(mbed_paths)
@@ -34,6 +60,9 @@ mbed_lib = env_mbed.StaticLibrary('mbed', mbed_sources)
 rtos_sources = env.GetMbedSources(rtos_paths)
 rtos_lib = env_mbed.StaticLibrary('rtos', rtos_sources)
 env.Prepend(LIBS=rtos_lib)
+
+usb_lib = env_mbed.StaticLibrary('usbdevice', usb_srcs)
+env.Append(LIBS=usb_lib)
 
 env.Append(LINKFLAGS=[
   '-Wl,--whole-archive',  # used to compile mbed HAL, which uses funky weak symbols
