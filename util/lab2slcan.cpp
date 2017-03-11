@@ -20,7 +20,7 @@ const uint16_t DEBOUNCE_TIME_MS = 50;
 const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
 
 // CAN message transmit helper to echo messages over SLCAN
-static bool transmitCANMessage(const CANMessage& msg) {
+static bool transmitAndEchoCANMessage(const CANMessage& msg) {
   if (can.write(msg) == 1) {
     // Echo anything that at least made it to the CAN controller
     // This does not imply that the message was acknowledged.
@@ -30,6 +30,11 @@ static bool transmitCANMessage(const CANMessage& msg) {
     return true;
   }
   return false;
+}
+
+// Helper to allow the host to send CAN messages
+static bool transmitCANMessage(const CANMessage& msg) {
+  return (can.write(msg) == 1);
 }
 
 int main() {
@@ -81,7 +86,7 @@ int main() {
 
         // Do edge actions
         if (thisButton == false) {
-          transmitCANMessage(CANMessage(0x42));
+          transmitAndEchoCANMessage(CANMessage(0x42));
         }
       }
     }
@@ -107,7 +112,7 @@ int main() {
       uint8_t data[2];
       data[0] = (hue >> 8) & 0xff;
       data[1] = (hue >> 0) & 0xff;
-      transmitCANMessage(CANMessage(0x43, (char*)data, 3));
+      transmitAndEchoCANMessage(CANMessage(0x43, (char*)data, 3));
     }
 
     // Process SLCAN commands and report CAN messages
