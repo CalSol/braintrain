@@ -424,3 +424,43 @@ bool SLCANBase::execDiagnosticCommand(const char* command, char* response) {
 
     return success;
 }
+
+/* Read and buffer one command if possible */
+bool SLCANBase::readCommand() {
+    bool active = false;
+    while (!commandQueued && inputReadable()) {
+        char c = (char)readInputByte();
+        if (c == '\r') {
+            if (commandOverflow) {
+                // Replace with a dummy invalid command so we return an error
+                inputCommandBuffer[0] = '!';
+                inputCommandBuffer[1] = '\0';
+                inputCommandLen = 0;
+                commandOverflow = false;
+                active = true;
+            } else {
+                // Null-terminate the buffered command
+                inputCommandBuffer[inputCommandLen] = '\0';
+                //stream.puts(inputCommandBuffer);
+                inputCommandLen = 0;
+                active = true;
+            }
+            if (inputCommandBuffer[0] != '\0') {
+                commandQueued = true;
+            }
+        } else if (c == '\n' && inputCommandLen == 0) {
+            // Ignore line feeds immediately after a carriage return
+        } else if (commandOverflow) {
+            // Swallow the rest of the command when overflow occurs
+        } else {
+            // Append to the end of the command
+            inputCommandBuffer[inputCommandLen++] = c;
+
+            if (inputCommandLen >= sizeof(inputCommandBuffer)) {
+                commandOverflow = true;
+            }
+        }
+    }
+
+    return active;
+}

@@ -9,7 +9,9 @@
 class USBSLCANBase : public SLCANBase {
 protected:
     USBSLCANBase(USBSerial& stream);
-    
+
+    virtual bool inputReadable() const;
+    virtual int  readInputByte();
     virtual bool processCommands();
     virtual bool processCANMessages();
     virtual bool flush();

@@ -2,7 +2,7 @@
 
 #include "ledutils.h"
 #include "slcan.h"
-#include "BufferedSerial.h"
+#include <USBSerial.h>
 
 RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
 

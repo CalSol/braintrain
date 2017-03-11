@@ -7,10 +7,20 @@ USBSLCANBase::USBSLCANBase(USBSerial& stream)
     
 }
 
+/* Check if any bytes are available at the input */
+bool USBSLCANBase::inputReadable() const {
+    return stream.readable();
+}
+
+/* Read a single byte from the input */
+int USBSLCANBase::readInputByte() {
+    return stream.getc();
+}
+
 /* Parse and execute a single SLCAN command and enqueue the response */
 bool USBSLCANBase::processCommands() {
     // Buffer an entire command
-    bool active = readCommand(stream);
+    bool active = readCommand();
 
     // Process the current command if there's space to send the response
     if (commandQueued) {
