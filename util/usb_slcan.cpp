@@ -11,18 +11,26 @@ USBSLCANBase::USBSLCANBase(USBSerial& stream)
 bool USBSLCANBase::processCommands() {
     // Buffer an entire command
     bool active = readCommand(stream);
-    
+
     // Process the current command if there's space to send the response
-    if (commandQueued && (outputPacketLen < sizeof(outputPacketBuffer))) {
-        if (execCommand(inputCommandBuffer)) {
-            // Success
-            outputPacketBuffer[outputPacketLen++] = '\r';
-        } else {
-            // Failure
-            outputPacketBuffer[outputPacketLen++] = '\a';
+    if (commandQueued) {
+        size_t responseLength = commandResponseLength(inputCommandBuffer);
+        if ((outputPacketLen + responseLength) <= sizeof(outputPacketBuffer)) {
+            char outputResponseBuffer[32];
+            outputResponseBuffer[0] = '\0';
+            if (execCommand(inputCommandBuffer, outputResponseBuffer)) {
+                // Success
+                for (char* s = outputResponseBuffer; *s != '\0'; s++) {
+                    outputPacketBuffer[outputPacketLen++] = *s;
+                }
+                outputPacketBuffer[outputPacketLen++] = '\r';
+            } else {
+                // Failure
+                outputPacketBuffer[outputPacketLen++] = '\a';
+            }
+            commandQueued = false;
+            active = true;
         }
-        commandQueued = false;
-        active = true;
     }
     
     return active;
