@@ -68,7 +68,9 @@ bool SLCANBase::readCommand(StreamType& stream) {
                 inputCommandLen = 0;
                 active = true;
             }
-            commandQueued = true;
+            if (inputCommandBuffer[0] != '\0') {
+                commandQueued = true;
+            }
         } else if (c == '\n' && inputCommandLen == 0) {
             // Ignore line feeds immediately after a carriage return
         } else if (commandOverflow) {
