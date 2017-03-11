@@ -2,13 +2,13 @@
 #define USB_SLCAN_H_
 
 #include "slcan.h"
-#include <USBSerial.h>
+#include <NonBlockingUSBSerial.h>
 #include <CircularBuffer.h>
 #include <Callback.h>
 
 class USBSLCANBase : public SLCANBase {
 protected:
-    USBSLCANBase(USBSerial& stream);
+    USBSLCANBase(NonBlockingUSBSerial& stream);
 
     virtual bool inputReadable() const;
     virtual int  readInputByte();
@@ -19,7 +19,7 @@ protected:
     // To be implemented by subclasses
     virtual bool getNextCANMessage(CANMessage& msg) = 0;
 private:
-    USBSerial& stream;
+    NonBlockingUSBSerial& stream;
     CANMessage queuedMessage;
     bool messageQueued;
 
@@ -29,7 +29,7 @@ private:
 
 class USBSLCANSlave : public USBSLCANBase {
 public:
-    USBSLCANSlave(USBSerial& stream);
+    USBSLCANSlave(NonBlockingUSBSerial& stream);
 
     bool putCANMessage(const CANMessage& msg);
     void setIgnoreConfigCommands(bool ignore);

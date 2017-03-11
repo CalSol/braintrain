@@ -1,6 +1,6 @@
 #include "slcan.h"
 
-USBSLCANBase::USBSLCANBase(USBSerial& stream)
+USBSLCANBase::USBSLCANBase(NonBlockingUSBSerial& stream)
     : stream(stream),
       messageQueued(false),
       outputPacketLen(0) {
@@ -78,7 +78,7 @@ bool USBSLCANBase::processCANMessages() {
             }
         }
     }
-    
+
     return active;
 }
 
@@ -86,7 +86,7 @@ bool USBSLCANBase::processCANMessages() {
 bool USBSLCANBase::flush() {
     bool active = false;
     if (outputPacketLen > 0) {
-        bool sent = stream.writeBlock((uint8_t*)(outputPacketBuffer),
+        bool sent = stream.writeBlockNB((uint8_t*)(outputPacketBuffer),
                                         (uint16_t)(outputPacketLen));
         if (sent) {
             active = true;
@@ -97,7 +97,7 @@ bool USBSLCANBase::flush() {
 }
 
 /* an SLCAN implementation that only accesses the CAN peripheral through callbacks */
-USBSLCANSlave::USBSLCANSlave(USBSerial& stream)
+USBSLCANSlave::USBSLCANSlave(NonBlockingUSBSerial& stream)
     : USBSLCANBase(stream),
       ignoreConfigCommands(false) {
 }

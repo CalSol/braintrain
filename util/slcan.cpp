@@ -94,8 +94,8 @@ bool SLCANBase::update() {
         active = true;
     }
 
-    if (active) {
-        flush();
+    if (flush()) {
+        active = true;
     }
 
     return active;

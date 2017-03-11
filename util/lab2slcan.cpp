@@ -2,7 +2,7 @@
 
 #include "ledutils.h"
 #include "slcan.h"
-#include <USBSerial.h>
+#include <NonBlockingUSBSerial.h>
 
 RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
 
@@ -11,7 +11,7 @@ DigitalOut led2(P0_9);
 
 DigitalIn btn(P0_4);
 
-USBSerial serial(0x1209, 0x0001, 0x0001, false);
+NonBlockingUSBSerial serial(0x1209, 0x0001, 0x0001, false);
 
 CAN can(P0_28, P0_29);
 USBSLCANSlave slcan(serial);
