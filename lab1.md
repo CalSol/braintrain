@@ -3,7 +3,7 @@
 ## Objectives
 Target audience
 - Anyone with no practical experience with Arduino-level embedded systems or with the mbed API.
-  - All electrical team members, whether focusing on software or hardware, should attend. 
+  - All electrical team members, whether focusing on software or hardware, should attend.
   - Anyone in general (even the mech people!) that is interested is also welcome to attend.
 
 Assumptions:
@@ -37,7 +37,7 @@ This should fade the RGB LED through all the colors over a period of 3 seconds, 
 
 0. If doing this lab during one of the scheduled training sessions, consider pairing up.
 0. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](https://github.com/CalSol/Zephyr-FW#project-configuration)), or use command-line scons and openocd.
-0. Sanity check: build the code, either by running `scons` at the repository root, or in Eclipse. 
+0. Sanity check: build the code, either by running `scons` at the repository root, or in Eclipse.
 
 ## Lab 1.2: "Hello, world"
 While the typical programming "Hello, world" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "hello, world": the blinking LED.
@@ -55,18 +55,18 @@ DigitalOut led1(P0_3);
 DigitalOut led2(P0_9);
 
 DigitalIn btn(P0_4);
-  
+
 RawSerial serial(P0_8, NC, 115200);
-``` 
+```
 
 **Objective**: for this first part will be to alternate the left LED (`led1`, on `P0_3`) and the right LED (`led2`, on `P0_9`) on and off, at once full cycle (left on, then right on) per second.
 
 > LEDs are electronic devices that emit light when current flows through them from anode (A) to cathode (K).
 >
-> The circuit on the BRAINv3.3 for the left and right LEDs is: 
+> The circuit on the BRAINv3.3 for the left and right LEDs is:
 >
 > ![Image](docs/led.png?raw=true)
-> 
+>
 > The LED turns on (emits light) when the pin voltage is high.
 
 mbed's [DigitalOut](https://developer.mbed.org/handbook/DigitalOut) provides a way to control an IO pin as a digital output - the pin can be set low (0v in this case) or high (3.3v in this case). Note that from the [example and API docs](https://developer.mbed.org/handbook/DigitalOut), this can be done by assigning 0 or 1 to the object. For example,
@@ -97,7 +97,7 @@ Feel free to try playing with the LEDs by writing some code and deploying it.
 > }
 > ```
 >
-> This has been structured as typical embedded code: an (optional) initialization section, followed by code repeating forever in a main loop.  
+> This has been structured as typical embedded code: an (optional) initialization section, followed by code repeating forever in a main loop.
 
 mbed also has basic timing functions, like [wait](https://developer.mbed.org/handbook/Wait), that waits for (approximately) some specified number of seconds regardless of the underlying hardware characteristics (like processor speed). For example,
 
@@ -105,7 +105,7 @@ mbed also has basic timing functions, like [wait](https://developer.mbed.org/han
 wait(0.1)
 ```
 
-will delay by 100ms. This may be useful for getting the (approximate) 1Hz blink rate. 
+will delay by 100ms. This may be useful for getting the (approximate) 1Hz blink rate.
 
 Done? Compare against [the solution here](solutions/lab1.2.cpp).
 
@@ -120,7 +120,7 @@ Like DigitalOut, mbed also has a [DigitalIn](https://developer.mbed.org/handbook
 if (!btn) {
   /* do something if button is pressed */
 }
-```  
+```
 
 > Switches are electronic devices that connect (or disconnect, in some cases) a circuit when pressed.
 >
@@ -132,7 +132,7 @@ if (!btn) {
 
 Done? Compare against [one possible solution here](solutions/lab1.3.cpp).
 
-You may realize that while the high-level objective (pause blinking) might appear clear, there are many different implementations that could result in subtly different behaviors. For example, it's unspecified whether pressing the button only needs to stop toggling the LED (as in the example solution) or if it should pause the counter (for example, if you press the button 0.25s after the last toggle, it shouldn't toggle for 0.25s after you release the button). For a toy example and at these timescales for human reaction, it's inconsequential, but that won't be true for every system you work on...  
+You may realize that while the high-level objective (pause blinking) might appear clear, there are many different implementations that could result in subtly different behaviors. For example, it's unspecified whether pressing the button only needs to stop toggling the LED (as in the example solution) or if it should pause the counter (for example, if you press the button 0.25s after the last toggle, it shouldn't toggle for 0.25s after you release the button). For a toy example and at these timescales for human reaction, it's inconsequential, but that won't be true for every system you work on...
 
 > Switches also suffer from mechanical bounce, where during press or release, the switch may jump between connected and disconnected several times before settling down. For applications which rely on edge detection (the high to low or low to high transition on the input) and sample fast enough, this may cause it to register false edges. Two common methods to "debounce" switches are either with a RC (resistor-capacitor) circuit or with filtering software.
 
@@ -145,18 +145,20 @@ mbed's [RawSerial](https://developer.mbed.org/users/mbed_official/code/mbed/docs
 
 > [UART (universal asynchronous receiver transmitter)](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter)  transmits a frame of data (typically a byte, or 8 bits) serially (that is, one at a time: each bit is placed on the digital line for some duration before the next bit is "shifted out"). Since there is no external clock (defining when bits transition), both the receiver and transmitter must agree on baud rate (bit rate).
 >
-> Here, we initialize the UART at 115200 baud, which is one of the faster but still common rates.  
+> Here, we initialize the UART at 115200 baud, which is one of the faster but still common rates.
 
 
 > RawSerial vs. Serial: mbed also offers a [Serial](https://developer.mbed.org/handbook/Serial) interface, which provides an additional file-like abstraction. We don't need that, so we don't use it, preferring to use the more lightweight RawSerial directly.
 
+<a name="serial-port"></a>
+
 To connect to the serial terminal on your PC:
 - For Windows:
   - Open up the Device Manager and find the COM port (like COM4) for USB Serial Device.
-  
+
     ![Image](docs/windows-device-manager.png?raw=true)
   - Open up a serial terminal (like [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), and connect to the COM port you found (above) at 115200 baud.
-  
+
     ![Image](docs/windows-putty.png?raw=true)
 - For Linux:
   - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
@@ -171,7 +173,7 @@ in the initialization section of your code.
 
 > `__FILE__` is replaced by the compiler with the filename of the source file containing it, and `__DATE__` and `__TIME__` are replaced by the compiler with the current time (which is the time of complication). Having version information readily available is helpful in many cases, such as when you don't know what's deployed, or to ensure that new code is actually being deployed.
 >
-> `\r` is a carriage return (move pointer to beginning of line) and `\n` is a newline (move pointer down one line).  
+> `\r` is a carriage return (move pointer to beginning of line) and `\n` is a newline (move pointer down one line).
 
 RawSerial also offers [`printf`](https://en.wikipedia.org/wiki/Printf_format_string), which allows you to interpolate (splice) variable data into the string. The first argument to `printf` is the format string (containing optional specifiers, that define the type and interpretation of variables to be spliced), and subsequent arguments are the values to be spliced.
 
@@ -188,7 +190,7 @@ Now put all the pieces together and code up the full objective. The [solution is
 ## Lab 1.5: "Hello, world", _in color_
 We've covered the basics, but that's still kind of boring. Especially since we have a RGB LED on each BRAIN - we might as well do something cool and fun with it!
 
-**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz. 
+**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz.
 
 Since this is a non-trivial task, we'll break it down into several parts:
 
@@ -198,14 +200,14 @@ Since this is a non-trivial task, we'll break it down into several parts:
   > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
-  
+
 0. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
 0. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
 0. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
 0. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
-   
+
    ![Image](docs/rgbled.png?raw=true)
-   
+
 0. Write the brightness to the output.
 
 ### Incrementing the hue
@@ -341,7 +343,7 @@ Instead, we will use PwmOut's `pulsewidth_us` function to set the on-time in mic
 ledR.pulsewidth_us((uint32_t)r * 500 / 65535);
 ledG.pulsewidth_us((uint32_t)g * 500 / 65535);
 ledB.pulsewidth_us((uint32_t)b * 500 / 65535);
-``` 
+```
 
 Once you've put together all the pieces, check out [the solution here](solutions/lab1.6.cpp).
 

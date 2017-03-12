@@ -44,12 +44,31 @@ The CAN controller operates on two different, single-ended (non-differential), l
 
 A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/CANL lines. While CAN controllers may be a on-chip peripheral on some microcontrollers, CAN transceivers are usually separate chips and may provide some degree of electrical isolation.
 
-## Lab 2.1: Getting Started: Hardware
-The LPC1549 on the BRAINv3.3 has a CAN controller, but no onboard CAN transceiver. You will need to connect the BRAIN to an external CAN transceiver breakout: connect one BRAIN IO to RXD, another to TXD, and the power supply (Vcc and GND) to the 3.3v microcontroller supply. Connect the CAN side lines (CANH, CANL, Vcc, GND) to the bus signal and supply lines. If working in a class, there should be a pre-programmed master node on the bus. If working alone, there should be a bus-on-a-breadboard in storage with Lab1.4 implemented so you have something to behaviorally check your work against.
+## Lab 2.1: Getting Started
+The lab hardware will already be set up for you, consisting of a CAN network with a master node (which you should NOT reprogram) and several other nodes for deploying lab code. Multiple people can work on different nodes on the same network simultaneously.
 
-TODO: ckt diagram
+> Hardware setup: The LPC1549 on the BRAINv3.3 has a CAN controller, but no onboard CAN transceiver. Therefore, each BRAIN is paired up with a CAN transceiver board. The logic level RXD line on the transceiver is connected to P0_28 on the BRAIN, the TXD line is connected to P0_29, and power sourced from the BRAIN. On the CAN side, all the power, CANH, and CANL lines (respectively) are tied together, with a 120-ohm terminator on each end.
 
-In the example code skeletons, replace `RXD_PIN` and `TXD_PIN` with the appropriate pin name (like `P0_28`). Note that the example solutions use `P0_28` for RXD and `P0_29` for TXD.
+### Optional: debug tools
+The master node is pre-programmed to respond to and generate CAN messages used in this lab. It also acts as a USB CAN network sniffer using the SLCAN protocol, appearing as a serial port (like lab1's serial "Hello World") to your host machine. Once you connect the master's USB port to your computer, find the serial port [like you did in lab1](lab1.md#serial-port).
+
+There are many protocol analyzer programs available, but for this lab we'll use [USBtin](http://www.fischl.de/usbtin/), which is a simple, cross-platform GUI program for displaying CAN traffic.
+
+![Image](docs/usbtin-interface.png?raw=true)
+
+Start the program, enter the serial port name in the top-left (ignore the baud rate and CAN controller mode) and hit "Connect".
+
+If everything was configured correctly, you should see the messages that the master node transmits regularly, with id = 043h ("43 hexadecimal", equivalent to 0x43) and length (DLC) 2:
+
+![Image](docs/usbtin-trace.png?raw=true)
+
+You can also go into monitor mode, which displays one message per unique CAN ID:
+
+![Image](docs/usbtin-monitor.png?raw=true)
+
+Now, instead of the spam of messages with id=0x43, you have just one (updating) lines for those. For example, if you press the user button on the master node, you should also see a message with id=0x42. However, you would be unlikely to notice that message in the torrent of trace mode.
+
+At the bottom, you can configure a message to be transmitted. Try entering a message with id=0x42 and data length 0, then press "Send". The LED on the master should pulse momentarily - this is basically what you'll be doing in the next section, but from your microcontroller.
 
 ## Lab 2.2: Sending CAN Messages
 The master node is configured to pulse its LED on for 0.5 seconds when receiving a CAN message with ID 0x42.
@@ -101,11 +120,15 @@ Problems? Common issues may be:
 
 ### Writing to CAN
 
-Compared to the button press, writing to the CAN bus is simple. First, create a message object using the id-only `CANMessage` constructor:
+Compared to the button press, writing to the CAN bus is simple. First, create a message object using the `CANMessage` constructor, `CANMessage(int _id, const char *_data, char _len = 8, CANType _type = CANData, CANFormat _format = CANStandard)`
 
 ```c++
-CANMessage msg(0x42);
+CANMessage msg(0x42, NULL, 0);
 ```
+
+The constructor has quite a few arguments. For our purposes, we will generally leave type and format as the default (data frame, standard format). For our current message, we only care about the id field, which is set to 0x42. Since there is no data, we pass in a NULL pointer and a length of 0.
+
+> Note that there is also an id-only CANMessage constructor. We don't use that because it it creates a remote (RTR) frame, typically use to request data from another node.
 
 Then, transmit that message using `CAN::write(CANMessage)`:
 
@@ -126,13 +149,7 @@ When the master node receives a CAN message with ID 0x41, it will pulse its LED 
 
 **Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node at some interesting amount of time (not 500ms as the last lab).
 
-`CANMessage` has another constructor:
-
-```c++
-CANMessage(int _id, const char *_data, char _len = 8, CANType _type = CANData, CANFormat _format = CANStandard)
-```
-
-For the purposes of this lab, you only need to consider the first 3 arguments, which specify the ID, payload, and payload length. Your goal will be to pack a 16-bit integer into the byte-oriented payload field. First, start by declaring the blink length (in this example, 1000 ms = 1 second):
+Now, we will put meaningful data into the data pointer and length fields of the CANMessage constructor. Your goal will be to pack a 16-bit integer into the byte-oriented payload field. First, start by declaring the blink length (in this example, 1000 ms = 1 second):
 
 ```c++
 uint16_t blinkLengthMs = 1000;
