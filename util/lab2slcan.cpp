@@ -3,6 +3,7 @@
 #include "ledutils.h"
 #include "slcan.h"
 #include <NonBlockingUSBSerial.h>
+#include <StaticQueue.h>
 
 RGBPwmOut rgbLed(P0_5, P0_6, P0_7);
 
@@ -32,9 +33,16 @@ static bool transmitAndEchoCANMessage(const CANMessage& msg) {
   return false;
 }
 
+StaticQueue<CANMessage, 16> slcanTransmitQueue;
+
 // Helper to allow the host to send CAN messages
 static bool transmitCANMessage(const CANMessage& msg) {
-  return (can.write(msg) == 1);
+  if (can.write(msg)) {
+    slcanTransmitQueue.enqueue(msg);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 int main() {
@@ -63,7 +71,7 @@ int main() {
   while (true) {
     // CAN receive handling
     CANMessage msg;
-    while (can.read(msg)) {
+    while (slcanTransmitQueue.dequeue(&msg) || can.read(msg)) {
       slcan.putCANMessage(msg);
       if (msg.id == 0x42) {
         led2 = 1;
