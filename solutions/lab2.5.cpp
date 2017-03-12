@@ -44,7 +44,7 @@ int main() {
 
     bool thisButton = btn;
     if (thisButton != lastButton && btn == 0) {
-      can.write(CANMessage(0x42));
+      can.write(CANMessage(0x42, NULL, 0));
     }
     lastButton = thisButton;
   }

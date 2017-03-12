@@ -38,7 +38,7 @@ void button_thread() {
     bool thisButton = btn;
     if (thisButton != lastButton && btn == 0) {
       CANMessage* msg = canTransmitQueue.alloc(osWaitForever);
-      *msg = CANMessage(0x42);
+      *msg = CANMessage(0x42, NULL, 0);
       canTransmitQueue.put(msg);
     }
     lastButton = thisButton;
@@ -73,7 +73,6 @@ int main() {
     while (evt.status == osEventMail) {
       CANMessage msg = *(CANMessage*)evt.value.p;
       canTransmitQueue.free((CANMessage*)evt.value.p);
-      led1 = !led1;
       can.write(msg);
 
       evt = canTransmitQueue.get(0);

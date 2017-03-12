@@ -86,7 +86,7 @@ int main() {
 
         // Do edge actions
         if (thisButton == false) {
-          transmitAndEchoCANMessage(CANMessage(0x42));
+          transmitAndEchoCANMessage(CANMessage(0x42, NULL, 0));
         }
       }
     }
@@ -112,7 +112,7 @@ int main() {
       uint8_t data[2];
       data[0] = (hue >> 8) & 0xff;
       data[1] = (hue >> 0) & 0xff;
-      transmitAndEchoCANMessage(CANMessage(0x43, (char*)data, 3));
+      transmitAndEchoCANMessage(CANMessage(0x43, (char*)data, 2));
     }
 
     // Process SLCAN commands and report CAN messages
