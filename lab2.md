@@ -64,11 +64,11 @@ If everything was configured correctly, you should see the messages that the mas
 
 > If there are no active CAN nodes on the bus, CAN transmission fails (because no other node is ACKing) and the CAN sniffer won't pick up anything. In that case, try programming any of the other nodes on the bus with the code skeleton below. The programmed firmware doesn't need to actually do anything, only initialize the CAN peripherals at the proper baud.
 
-You can also go into monitor mode, which displays one message per unique CAN ID:
+You can also go into monitor mode, which displays one updating line per unique CAN ID:
 
 ![Image](docs/usbtin-monitor.png?raw=true)
 
-Now, instead of the spam of messages with id=0x43, you have just one (updating) lines for those. For example, if you press the user button on the master node, you should also see a message with id=0x42. However, you would be unlikely to notice that message in the torrent of trace mode.
+No more spam in this mode, and higher data rate messages won't drown out lower data rate messages. For example, if you press the user button on the master node, you should see a message appear with id=0x42. However, you would be unlikely to notice that message in the torrent of trace mode.
 
 At the bottom, you can configure a message to be transmitted. Try entering a message with id=0x42 and data length 0, then press "Send". The LED on the master should pulse momentarily - this is basically what you'll be doing in the next section, but from your microcontroller.
 
@@ -77,7 +77,7 @@ The master node is configured to pulse its LED on for 0.5 seconds when receiving
 
 **Objective**: When the button is pressed on your BRAIN, have it transmit a message that triggers a blink on the remote master node.
 
-Start with this code skeleton:
+Start with this code skeleton in your `src/main.cpp`:
 
 ```c++
 #include "mbed.h"
@@ -91,7 +91,7 @@ DigitalIn btn(P0_4);
 
 RawSerial serial(P0_8, NC, 115200);
 
-CAN can(RXD_PIN, TXD_PIN);
+CAN can(P0_28, P0_29);
 
 int main() {
   // Initialize CAN controller at 1 Mbaud
@@ -102,8 +102,6 @@ int main() {
   }
 }
 ```
-
-_Remember to replace `RXD_PIN` and `TXD_PIN` with the appropriate pins based on your hardware configuration. Objects declarations for the on-board hardware (LEDs, switches, and a serial console), have been provided for your convenience._
 
 ### Detecting Button Presses
 
@@ -141,7 +139,7 @@ can.write(msg);
 Note that you can combine both operations into one line:
 
 ```c++
-can.write(CANMessage(0x42));
+can.write(CANMessage(0x42, NULL, 0));
 ```
 
 Have your edge detection code execute the above on a button press, and you should be done. Feel free to compare against the [solution](solutions/lab2.2.cpp), too.
@@ -292,7 +290,7 @@ While the RTOS library has been included in the standard build, we haven't used 
 - a LED thread will blink the LED upon receiving a notification
 - a button thread will notify the CAN thread to transmit a message
 
-Start by including the RTOS header:
+First, include the RTOS header:
 ```c++
 #include "rtos.h"
 ```
