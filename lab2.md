@@ -62,6 +62,8 @@ If everything was configured correctly, you should see the messages that the mas
 
 ![Image](docs/usbtin-trace.png?raw=true)
 
+> If there are no active CAN nodes on the bus, CAN transmission fails (because no other node is ACKing) and the CAN sniffer won't pick up anything. In that case, try programming any of the other nodes on the bus with the code skeleton below. The programmed firmware doesn't need to actually do anything, only initialize the CAN peripherals at the proper baud.
+
 You can also go into monitor mode, which displays one message per unique CAN ID:
 
 ![Image](docs/usbtin-monitor.png?raw=true)
