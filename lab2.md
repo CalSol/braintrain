@@ -47,6 +47,8 @@ A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/C
 ## Lab 2.1: Getting Started
 The lab hardware will already be set up for you, consisting of a CAN network with a master node (which you should NOT reprogram) and several other nodes for deploying lab code. Multiple people can work on different nodes on the same network simultaneously.
 
+**The master's USB port must be plugged in, this provides the necessary voltage for the CAN-side transceivers.**
+
 > Hardware setup: The LPC1549 on the BRAINv3.3 has a CAN controller, but no onboard CAN transceiver. Therefore, each BRAIN is paired up with a CAN transceiver board. The logic level RXD line on the transceiver is connected to P0_28 on the BRAIN, the TXD line is connected to P0_29, and power sourced from the BRAIN. On the CAN side, all the power, CANH, and CANL lines (respectively) are tied together, with a 120-ohm terminator on each end.
 
 ### Optional: debug tools
