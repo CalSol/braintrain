@@ -2,7 +2,7 @@
 
 ## Objectives
 Objectives
-- Learn the mbed CAN API and the basic underlying principles/
+- Learn the mbed CAN API and the basic underlying principles
 - Learn about and use the different multitasking models on a CAN node.
 
 ## Introduction
