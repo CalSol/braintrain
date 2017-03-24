@@ -146,6 +146,8 @@ can.write(CANMessage(0x42, NULL, 0));
 
 Have your edge detection code execute the above on a button press, and you should be done. Feel free to compare against the [solution](solutions/lab2.2.cpp), too.
 
+> Note: this presents mbed's method for constructing CAN messages. Libraries (such as `zephyr-common`) may provide higher-level abstractions to build and pack data into CAN messages.
+
 ## Lab 2.3: CAN Messages with Data
 When the master node receives a CAN message with ID 0x41, it will pulse its LED with a length specified by the data field, in milliseconds. The blink length is the first 16-bit integer in the payload, in [big-endian (network order)](https://en.wikipedia.org/wiki/Endianness#Networking) format.
 
@@ -234,6 +236,10 @@ while (can.read(msg)) {
 The master node broadcasts its hue, in centi-degrees, as a 16-bit integer in the payload of a CAN message with id=0x43. You will have to unpack the byte-oriented data from the CAN message into a 16-bit hue (essentially using the opposite process in lab 2.3) and write it to the hue of the RGB LED. Use saturation = 65535 and value (brightness) = 32767. Don't forget that the hue should only be changed upon receiving a message with id=0x43 - there may be other network traffic on the CAN network.
 
 Once you're done, you can compare against the [reference solution](solutions/lab2.4.cpp).
+
+> Note: most CAN peripheral hardware provides several message boxes which messages can be received into - once a message is read out of a box, it can receive a new one. Essentially, this provides a small buffer of received messages before additional incoming messages must be dropped.
+>
+> In our code, we sometimes use a `CANRXTXBuffer` object (instead of just `CAN`) - this presents the same API as mbed's `CAN` but adds a transparent software buffer.
 
 ## Extra for Experts Lab 2.5: Cooperative Multitasking
 A microcontroller that can only do one thing is quite limiting, so let's put together the push-to-blink functionality (lab 2.2), the RGB LED hue update functionality (lab 2.4), and also the master LED pulse functionality. Note that the master code is set up such with the functionality in lab 2.2, where a button press causes it to send a CAN message with id=0x42.
