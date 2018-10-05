@@ -78,7 +78,6 @@ env.AddMethod(calsol_fw, "CalSolFW")
 ###
 # TODO: perhaps move environments into SConscript, but nested variant_dirs
 # don't seem to work
-env.Append(CPPPATH=[Dir('tachyon-defs').srcnode()])
 env.Append(CPPDEFINES={'MBED_CONF_PLATFORM_DEFAULT_SERIAL_BAUD_RATE': 115200})
 env.Append(FLASHINTERFACE='interface/cmsis-dap.cfg')
 
