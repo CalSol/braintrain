@@ -35,7 +35,7 @@ This should fade the RGB LED through all the colors over a period of 3 seconds, 
 > 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
 
 1. If doing this lab during one of the scheduled training sessions, consider pairing up.
-1. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](https://github.com/CalSol/Zephyr-FW#project-configuration)), or use command-line scons and openocd.
+1. Clone this repository. You may also set up this repository under Eclipse (similarly to [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#project-configuration)), or use command-line scons and openocd.
 
 ## Lab 1.2: "Hello, world"
 While the typical programming "Hello, world" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "hello, world": the blinking LED.
