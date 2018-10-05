@@ -3,7 +3,10 @@ import os, os.path
 
 Import('env')
 
+env.Append(CCFLAGS = '-O1 -g')
+
 env.ConfigureMbedTarget('LPC1549', File('mbed/targets/targets.json').srcnode())
+env.Append(CXXFLAGS = '-std=c++11')  # override the mbed default
 
 # Build the mbed library as a static library
 mbed_paths = env.GetMbedSourceDirectories('mbed')
