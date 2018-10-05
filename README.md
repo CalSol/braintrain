@@ -19,7 +19,7 @@ to flash stock code that cycles the hue of the RGB LED and toggles the two side 
 Pressing the user button should pause the hue and LED toggling.
 See [Lab 1](lab1.md) for more details.
 
-To flash your code (in `src/main.cpp`), run:
+To build and flash your code (in `src/main.cpp`), run:
 ```
 scons flash-brain
 ```
