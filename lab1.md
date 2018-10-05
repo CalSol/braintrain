@@ -21,10 +21,9 @@ A microcontroller is basically a full computer system on a chip, including a CPU
 This lab will walk through some simple examples to get started.
 
 ## Sanity Check
-If you want to sanity-check your BRAINv3.3 hardware, you can flash the included `braintest.bin` with OpenOCD:
-
+If you want to sanity-check your BRAINv3.3 hardware and build environment, you can build and flash test code:
 ```
-openocd -f interface/cmsis-dap.cfg -f lpc1549_openocd.cfg -c init -c "reset halt" -c "flash erase_sector 0 0 last" -c "flash write_image braintest.bin" -c "reset run" -c "exit"
+scons flash-braintest
 ```
 
 This should fade the RGB LED through all the colors over a period of 3 seconds, toggling the side LEDs every half-period. Pressing the user button (left one) should pause the sequence. If any of this doesn't work, then something is wrong with your setup and needs to be fixed before proceeding further.
@@ -32,12 +31,11 @@ This should fade the RGB LED through all the colors over a period of 3 seconds, 
 ## Lab 1.1: Getting started
 > Do these before the lab:
 >
-> 0. Do soldering training (make your own BRAINv3.3).
-> 0. Set up [the build system](https://github.com/CalSol/Zephyr-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
+> 1. Do soldering training (make your own BRAINv3.3).
+> 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
 
-0. If doing this lab during one of the scheduled training sessions, consider pairing up.
-0. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](https://github.com/CalSol/Zephyr-FW#project-configuration)), or use command-line scons and openocd.
-0. Sanity check: build the code, either by running `scons` at the repository root, or in Eclipse.
+1. If doing this lab during one of the scheduled training sessions, consider pairing up.
+1. Clone this repository. You may also set up this repository under Eclipse (similarly to [Zephyr-FW](https://github.com/CalSol/Zephyr-FW#project-configuration)), or use command-line scons and openocd.
 
 ## Lab 1.2: "Hello, world"
 While the typical programming "Hello, world" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "hello, world": the blinking LED.
@@ -107,7 +105,13 @@ wait(0.1)
 
 will delay by 100ms. This may be useful for getting the (approximate) 1Hz blink rate.
 
-Done? Compare against [the solution here](solutions/lab1.2.cpp).
+Done? Build and flash firmware by running:
+```
+scons flash-brain
+```
+or doing the equivalent from inside Eclipse.
+
+You can also compare against [the solution here](solutions/lab1.2.cpp).
 
 ## Lab 1.3: Now with _inputs_!
 A system that only produces outputs isn't much fun. Let's do something with the user button (the left one).
@@ -194,21 +198,21 @@ We've covered the basics, but that's still kind of boring. Especially since we h
 
 Since this is a non-trivial task, we'll break it down into several parts:
 
-0. Start with a [HSV (hue, saturation, and value)](https://en.wikipedia.org/wiki/HSL_and_HSV) representation of color. We'll work with floating point (`float`) data types for now.
+1. Start with a [HSV (hue, saturation, and value)](https://en.wikipedia.org/wiki/HSL_and_HSV) representation of color. We'll work with floating point (`float`) data types for now.
 
   > At a high level, the values in HSV represent:
   > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
 
-0. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
-0. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
-0. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
-0. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
+1. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
+1. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
+1. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
+1. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
 
    ![Image](docs/rgbled.png?raw=true)
 
-0. Write the brightness to the output.
+1. Write the brightness to the output.
 
 ### Incrementing the hue
 This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
