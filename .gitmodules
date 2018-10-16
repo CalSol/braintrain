@@ -4,3 +4,6 @@
 [submodule "mbed"]
 	path = mbed
 	url = https://github.com/CalSol/mbed.git
+[submodule "calsol-fw-libs"]
+	path = calsol-fw-libs
+	url = https://github.com/CalSol/calsol-fw-libs.git

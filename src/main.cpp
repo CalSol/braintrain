@@ -14,9 +14,7 @@ DigitalIn btn(P0_4);
 RawSerial serial(P0_8, NC, 115200);
 
 int main() {
-  /* YOUR INITIALIZATION HERE */
-
-  while (true) {
-    /* YOUR CODE HERE */
-  }
+  ledR.write(1);
+  ledG.write(1);
+  ledB.write(1);
 }
