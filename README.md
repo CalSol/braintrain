@@ -11,7 +11,8 @@ Coming soon:
 - Suggest something!
 
 ## Quick Reference
-Instructions for setting up the build system are in [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#setup).
+Detailed instructions for setting up the build system are in [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#setup).
+In short, you will need to install GCC-ARM, SCons, and OpenOCD, all of which are available for Windows, Linux, and Mac.
 
 To sanity-check the build and flashing system, run:
 ```
