@@ -21,7 +21,7 @@ A microcontroller is basically a full computer system on a chip, including a CPU
 This lab will walk through some simple examples to get started.
 
 ## Sanity Check
-If you want to sanity-check your BRAINv3.3 hardware and build environment, you can build and flash test code:
+If you want to sanity-check your BRAINv3.3 hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and BRAIN connected)
 ```
 scons flash-braintest
 ```
@@ -109,7 +109,7 @@ Done? Build and flash firmware by running:
 ```
 scons flash-brain
 ```
-or doing the equivalent from inside Eclipse.
+outside the `src` folder (inside the `braintrain` folder) or doing the equivalent from inside Eclipse.
 
 You can also compare against [the solution here](solutions/lab1.2.cpp).
 
@@ -164,6 +164,13 @@ To connect to the serial terminal on your PC:
   - Open up a serial terminal (like [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), and connect to the COM port you found (above) at 115200 baud.
 
     ![Image](docs/windows-putty.png?raw=true)
+
+- For Mac:
+  - Open up a terminal window, and type in `ls \dev\cu.*`. Look for a device thtat has usbserial in the name. Note down the full name, as this is the name of the programmer.
+  - There are several ways of viewing the serial output, but minicom is the most convenient. You should now install minicom.
+  - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\NAMEOFDEVICE`
+  - To exit minicom, press `Ctrl-A X`
+
 - For Linux:
   - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
 
@@ -298,7 +305,7 @@ Why is some seemingly simple arithmetic so expensive? Because of the use of floa
 
 **Objective**: Optimize computation so the LED hue period is closer to 3 s.
 
-Here, we'll define hue, saturation, and value as 16-bit unsigned integers (`uin16_t`, range of [0, 65535]):
+Here, we'll define hue, saturation, and value as 16-bit unsigned integers (`uint16_t`, range of [0, 65535]):
 - Hue will be defined as 100x degree. So 0 is still 0°, but 12000 will be 120°. This gives us an effective resolution of 0.01°.
 - Saturation and value will be re-normalized to 65535 being full value. (so 0 still corresponds to 0%, 32768 is approximately 50%, and 65535 is 100%).
 
@@ -327,7 +334,7 @@ hsv_to_rgb_uint16(hue, 65535, 65535, &r, &g, &b);
 ```
 
 ### Square the RGB brightness
-This is slightly tricky - since the brightness for each channel occupies the full value of the data type (0 to 65535 for `uint16_t`), we must expand the data type to a 32-bit integer before squaring. Then, we need re-normalize it to the original range by dividing by 65535:
+This is slightly tricky - since the brightness for each channel occupies the full value of the data type (0 to 65535 for `uint16_t`), we must expand the data type to a 32-bit integer before squaring, otherwise the value would overflow. Then, we need re-normalize it to the original range by dividing by 65535:
 
 ```c++
 r = (uint32_t)r * r / 65535;
