@@ -7,6 +7,7 @@ Target audience
   - Anyone in general (even the mech people!) that is interested is also welcome to attend.
 
 Assumptions:
+- You have gone through the installation lab.
 - You know are familiar with imperative programming languages (like C) and object-oriented style (like C++ / Java), and can at least stumble through C++ syntax.
 - You can read electronics schematics.
 
@@ -16,7 +17,7 @@ Objectives
 ## Introduction
 In the context of CalSol, an embedded system refers to a microcontroller-based system, which runs code (firmware) that interacts with (through inputs such as sensors or buttons, and outputs such as actuators or LEDs) the physical world.
 
-A microcontroller is basically a full computer system on a chip, including a CPU, program memory, data memory, and IO. You'll be working with the BRAINv3.3 (which you've already soldered), containing a LPC1549 that has a (up to) 72 MHz Cortex-M3 processor, 256 KiB of FLASH program memory, 4 KiB of data memory, and 30 IO pins. We've also standardized on using the [mbed](https://www.mbed.com/en/) library to present a nicer API to control the underlying hardware.
+A microcontroller is a full computer system on a chip, including a CPU, program memory, data memory, and IO. You'll be working with the BRAINv3.3 (which you've already soldered), containing a LPC1549 that has a (up to) 72 MHz Cortex-M3 processor, 256 KiB of FLASH program memory, 4 KiB of data memory, and 30 IO pins. We've also standardized on using the [mbed](https://www.mbed.com/en/) library to present a nicer API to control the underlying hardware.
 
 This lab will walk through some simple examples to get started.
 
@@ -31,7 +32,6 @@ This should fade the RGB LED through all the colors over a period of 3 seconds, 
 ## Lab 1.1: Getting started
 > Do these before the lab:
 >
-> 1. Do soldering training (make your own BRAINv3.3).
 > 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
 
 1. If doing this lab during one of the scheduled training sessions, consider pairing up.
@@ -70,16 +70,19 @@ RawSerial serial(P0_8, NC, 115200);
 mbed's [DigitalOut](https://developer.mbed.org/handbook/DigitalOut) provides a way to control an IO pin as a digital output - the pin can be set low (0v in this case) or high (3.3v in this case). Note that from the [example and API docs](https://developer.mbed.org/handbook/DigitalOut), this can be done by assigning 0 or 1 to the object. For example,
 
 ```c++
-led1 = 1;
+led1 = 1; //or
+led1.write(1);
 ```
 
 will turn on the left LED, while
 
 ```c++
-led1 = 0;
+led1 = 0; //or
+led1.write(0);
 ```
 
 will turn off the left LED.
+
 
 Feel free to try playing with the LEDs by writing some code and deploying it.
 
@@ -166,14 +169,14 @@ To connect to the serial terminal on your PC:
     ![Image](docs/windows-putty.png?raw=true)
 
 - For Mac:
-  - Open up a terminal window, and type in `ls \dev\cu.*`. Look for a device thtat has usbserial in the name. Note down the full name, as this is the name of the programmer.
-  - There are several ways of viewing the serial output, but minicom is the most convenient. You should now install minicom.
-  - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\NAMEOFDEVICE`
-  - To exit minicom, press `Ctrl-A X`
+  - To view Serial output we will use minicom. Open up a terminal window and install it with `brew install minicom`.
+  - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\tty.usb` and then press tab to autocomplete the device name. If you have trouble ask someone.
+  - To exit minicom, press `ESC-Shift-z`, and then use the exit command `Shift-x`
 
 - For Linux:
   - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
 
+### Display to Serial
 The simplest RawSerial operation is `puts`, which writes out the string passed into it. For example, one way to print versioning information would be:
 
 ```c++
