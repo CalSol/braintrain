@@ -242,7 +242,7 @@ int main() {
 ### Converting HSV to RGB
 The details are complicated, so we've handled the details for you in the form of library code that's included in the training repository.
 
-To use the library, you should first include the header, which contains the function signatures. Do this under the `mbed.h` include at the top of the file:
+To use the library, you should first include the header if it hasn't been already included for you, which contains the function signatures. Do this under the `mbed.h` include at the top of the file:
 
 ```c++
 #include "ledutils.h"
