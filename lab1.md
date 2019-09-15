@@ -204,7 +204,7 @@ Now put all the pieces together and code up the full objective. The [solution is
 ## Lab 1.5: "Hello, world", _in color_
 We've covered the basics, but that's still kind of boring. Especially since we have a RGB LED on each BRAIN - we might as well do something cool and fun with it!
 
-**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz.
+**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz. By updating the LED at a higher rate, the color transitions will appear smoother (although 120Hz is already rather smooth to the human eye).
 
 Since this is a non-trivial task, we'll break it down into several parts:
 
@@ -215,14 +215,14 @@ Since this is a non-trivial task, we'll break it down into several parts:
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
 
-1. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
-1. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
-1. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
-1. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
+2. Set the saturation and value to a constant 1. Increment the hue slightly every tick.
+3. Convert HSV representation to RGB representation, which corresponds to the raw red, green, and blue LED channels.
+4. Square the RGB brightness, since [humans perceive brightness of a point source as the inverse square of actual intensity](https://en.wikipedia.org/wiki/Stevens%27_power_law).
+5. Invert the RGB brightness. Unlike the single LEDs which connected the microcontroller to the LED anode (positive) pin, the RGB LED is a common anode LED and the microcontroller is connected to the cathode (negative) pin of each LED channel, so the LED only emits light when the pin is low.
 
    ![Image](docs/rgbled.png?raw=true)
 
-1. Write the brightness to the output.
+6. Write the brightness to the output.
 
 ### Incrementing the hue
 This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
@@ -251,10 +251,22 @@ To use the library, you should first include the header, which contains the func
 This header defines several functions, the relevant one is `hsv_to_rgb_float`:
 
 ```c++
-/* Converts H (degrees, [0, 360)), S, V (in [0, 1]), to R, G, B (all in [0, 1])
+/* Converts HSV to RGB
+
+ex: 120 degrees, full saturation and full value is pure green
+float r, g, b;
+hsv_to_rgb_float(120, 1, 1, &r, &g, &b);
+// now here r is 0, g is 1, and b is 0
+
  */
-void hsv_to_rgb_float(float h_deg, float s, float v,
-    float *r_out, float *g_out, float *b_out);
+void hsv_to_rgb_float(
+    float h_deg,       // hue in degrees, 0 to 360
+    float s,           // saturation, 0 to 1
+    float v,           // value, 0 to 1
+    float *r_out,      // after function returns variable who's address was passed in gets the red value, 0 to 1
+    float *g_out,      // gets the green value, 0 to 1
+    float *b_out       // gets the blue value, 0 to 1
+    );
 ```
 
 This function takes 6 arguments: 3 inputs, 3 "outputs" (as pointers). It can be used like:
@@ -264,7 +276,7 @@ float r, g, b;
 hsv_to_rgb_float(hue, 1, 1, &r, &g, &b);
 ```
 
-> One way to work around C/C++'s lack of multiple return values is to pass in a _pointer_ to the output variable, or the location where it is stored. In the above snippet, we pass in the address of `r`, `g`, and `b` to the function. After the call, the computed r, g, b values are stored in those variables.
+> One way to work around C/C++'s lack of multiple return values is to pass in a _pointer_ to the output variable, or the location/address in memory where it is stored. In the above snippet, we pass in the address of `r`, `g`, and `b` to the function. After the call, the computed r, g, b values are stored in those variables.
 >
 > The `&` operator gets the memory address of a variable, returning a pointer to the object. While not used here, the `*` operator _dereferences_ a pointer, either returning or allowing reassignment to the variable pointed to.
 
@@ -278,7 +290,7 @@ r = r * r;
 ```
 
 ### Invert the RGB brightness
-This is left as an exercise for the reader. The subtraction operator is exactly what you'd expect.
+When we want full brightness (1), we need to actually write the opposite (0) to get full brightness, and vice versa for no light output at all. This is left as an exercise for the reader. The subtraction operator is exactly what you'd expect.
 
 ### Writing out the brightness
 What we want to do is to dim the LED, but we only have digital outputs on the LEDs. Instead, we take advantage of persistence of vision, where average intensity over a short amount of time is perceived. If we blink a LED on and off really fast, the perceived intensity will be the _duty cycle_, or on time divided by the total period (on time plus off time).
