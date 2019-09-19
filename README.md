@@ -26,3 +26,5 @@ To build and flash your code (in `src/main.cpp`), run:
 ```
 scons flash-brain
 ```
+
+![BRAIN pinouts](docs/brain-cheat.png)
