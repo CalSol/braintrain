@@ -98,7 +98,7 @@ Feel free to try playing with the LEDs by writing some code and deploying it.
 > }
 > ```
 >
-> This has been structured as typical embedded code: an (optional) initialization section, followed by code repeating forever in a main loop.
+> This has been structured as typical embedded code: an (optional) initialization section, followed by code repeating forever in a main loop. This is normal because we want the code to run forever as long as there is power. Usually it is not that useful if the code runs once on boot and not again until it is reset or the power is cycled.
 
 mbed also has basic timing functions, like [wait](https://developer.mbed.org/handbook/Wait), that waits for (approximately) some specified number of seconds regardless of the underlying hardware characteristics (like processor speed). For example,
 

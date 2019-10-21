@@ -11,10 +11,17 @@ Coming soon:
 - Suggest something!
 
 ## Quick Reference
+To clone the repository and initialize the submodules in it:
+```
+git clone https://github.com/CalSol/braintrain.git
+cd braintrain
+git submodule update --init --recursive
+```
+
 Detailed instructions for setting up the build system are in [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#setup).
 In short, you will need to install GCC-ARM, SCons, and OpenOCD, all of which are available for Windows, Linux, and Mac.
 
-To sanity-check the build and flashing system, run:
+To sanity-check the build and flashing system, run (inside the `braintrain` folder):
 ```
 scons flash-braintest
 ```
