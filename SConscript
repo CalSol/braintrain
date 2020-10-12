@@ -14,7 +14,7 @@ env_stm32f303.Append(CCFLAGS=['-Wall', '-Werror'])
 
 # Separately build main.cpp and supporting code, so that the supporting code can
 # be shared with solution compilation
-main_all_lpc1549 = Glob('src_brain/*.cpp')
+main_all_lpc1549 = Glob('src/*.cpp')
 support_srcs_lpc1549 = [elt for elt in main_all_lpc1549
     if os.path.basename(elt.abspath) not in ['main.cpp']]
 supportlib_lpc1549 = env_lpc1549.StaticLibrary('mainlibs_lpc1549', support_srcs_lpc1549)
@@ -27,8 +27,8 @@ supportlib_stm32f303 = env_stm32f303.StaticLibrary('mainlibs_stm32f303', support
 env_stm32f303.Append(LIBS=supportlib_stm32f303)
 
 all_firmwares.append(env_lpc1549.CalSolFW('brain',
-  srcs='src_brain/main.cpp',
-  includes=['src_brain']
+  srcs='src/main.cpp',
+  includes=['src']
 ))
 
 all_firmwares.append(env_stm32f303.CalSolFW('stm32f303',
@@ -37,18 +37,18 @@ all_firmwares.append(env_stm32f303.CalSolFW('stm32f303',
 ))
 
 # Build all solutions
-solutions = Glob('solutions_brain/*.cpp')
+solutions = Glob('solutions/*.cpp')
 for solution in solutions:
   name = os.path.splitext(solution.name)[0]
   all_firmwares.append(env_lpc1549.CalSolFW(os.path.join('solutions', name),
     srcs=[solution],
-    includes=['src_brain']
+    includes=['src']
   ))
 
 # Build the master node with SLCAN debugging
-all_firmwares.append(env_lpc1549.CalSolFW('util_brain/lab2slcan',
+all_firmwares.append(env_lpc1549.CalSolFW('util/lab2slcan',
   srcs=Glob('util/*.cpp'),
-  includes=['util','src_brain']
+  includes=['util','src']
 ))
 
 Return('all_firmwares')
