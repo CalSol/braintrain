@@ -1,0 +1,43 @@
+# Modifies the environment to build mbed firmware for the STM32F303K8 using GCC-ARM
+import os, os.path
+
+Import('env')
+
+env.Append(CCFLAGS = '-O1 -g')
+
+env.ConfigureMbedTarget('NUCLEO_F303K8', File('mbed/targets/targets.json').srcnode())
+env.Append(CXXFLAGS = '-std=c++11')  # override the mbed default
+
+# Build the mbed library as a static library
+mbed_paths = env.GetMbedSourceDirectories('mbed')
+env.Append(CPPPATH=[x.srcnode() for x in mbed_paths])  # this allows duplicate=0
+env['MBED_LINKSCRIPT'] = env.GetMbedLinkscript(mbed_paths)
+
+env_mbed = env.Clone()
+env_mbed.Append(CCFLAGS='-w')  # don't care about errors in dependencies
+mbed_sources = env.GetMbedSources(mbed_paths)
+mbed_lib = env_mbed.StaticLibrary('mbed', mbed_sources)
+env.Prepend(LIBS=mbed_lib)
+
+# Build mbed RTOS as a static library
+rtos_paths = [
+  Dir('mbed/rtos'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3/TOOLCHAIN_GCC'),
+]
+env.Append(CPPPATH=[x.srcnode() for x in rtos_paths])  # this allows duplicate=0
+
+env.Append(CPPDEFINES=[
+    'OS_CLOCK=12000000',  # for RTOS
+])
+
+rtos_sources = env.GetMbedSources(rtos_paths)
+rtos_lib = env.StaticLibrary('rtos', rtos_sources)
+env.Prepend(LIBS=rtos_lib)
+
+env.Append(LINKFLAGS=[
+  '-Wl,--whole-archive',  # used to compile mbed HAL, which uses funky weak symbols
+  mbed_lib,
+  '-Wl,--no-whole-archive',
+])
