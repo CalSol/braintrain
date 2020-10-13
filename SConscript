@@ -45,6 +45,14 @@ for solution in solutions:
     includes=['src']
   ))
 
+solutions = Glob('solutions_stm32f303/*.cpp')
+for solution in solutions:
+  name = os.path.splitext(solution.name)[0]
+  all_firmwares.append(env_stm32f303.CalSolFW(os.path.join('solutions_stm32f303', name),
+    srcs=[solution],
+    includes=['src_stm32f303']
+  ))
+
 # Build the master node with SLCAN debugging
 all_firmwares.append(env_lpc1549.CalSolFW('util/lab2slcan',
   srcs=Glob('util/*.cpp'),
