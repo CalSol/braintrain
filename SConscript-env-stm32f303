@@ -23,8 +23,8 @@ env.Prepend(LIBS=mbed_lib)
 rtos_paths = [
   Dir('mbed/rtos'),
   Dir('mbed/rtos/rtx/TARGET_CORTEX_M'),
-  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3'),
-  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M3/TOOLCHAIN_GCC'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M4_M7'),
+  Dir('mbed/rtos/rtx/TARGET_CORTEX_M/TARGET_M4_M7/TOOLCHAIN_GCC'),
 ]
 env.Append(CPPPATH=[x.srcnode() for x in rtos_paths])  # this allows duplicate=0
 
