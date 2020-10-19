@@ -2,6 +2,8 @@
 import multiprocessing
 import os
 import os.path
+import sys
+import subprocess
 
 import warnings, SCons.Errors
 
@@ -9,6 +11,41 @@ SetOption('num_jobs', multiprocessing.cpu_count() + 1)
 
 # On Windows platforms, force gcc-style (instead of MSVC-style) arguments.
 env = Environment(ENV=os.environ, tools=['g++', 'gcc', 'gas', 'ar', 'gnulink'])
+
+# On Windows platforms, use a custom spawn
+# Copied from https://github.com/SCons/scons/wiki/LongCmdLinesOnWin32
+if env['PLATFORM'] == 'win32':
+  import win32file
+  import win32event
+  import win32process
+  import win32security
+
+  def my_spawn(sh, escape, cmd, args, spawnenv):
+#    print(spawnenv)
+#    for var in spawnenv:
+#      print(spawnenv[var])
+#      spawnenv[var] = spawnenv[var].encode('ascii', 'replace')
+
+    sAttrs = win32security.SECURITY_ATTRIBUTES()
+    StartupInfo = win32process.STARTUPINFO()
+    newargs = ' '.join(map(escape, args[1:]))
+    cmdline = cmd + " " + newargs
+
+    # check for any special operating system commands
+    if cmd == 'del':
+      for arg in args[1:]:
+          win32file.DeleteFile(arg)
+      exit_code = 0
+    else:
+      # otherwise execute the command.
+      hProcess, hThread, dwPid, dwTid = win32process.CreateProcess(None, cmdline, None, None, 1, 0, spawnenv, None, StartupInfo)
+      win32event.WaitForSingleObject(hProcess, win32event.INFINITE)
+      exit_code = win32process.GetExitCodeProcess(hProcess)
+      win32file.CloseHandle(hProcess);
+      win32file.CloseHandle(hThread);
+    return exit_code
+
+  env['SPAWN'] = my_spawn
 
 # Performance improvements
 AddOption(
@@ -56,11 +93,8 @@ if gitversion is None:
   warnings.warn("Unable to get description of current Git HEAD, GITVERSION defaults to 'unknown'")
   gitversion = "unknown"
 
-# Build wrapper for firmware that eliminates problematic files and
-# automatically builds the .elf, .bin, and dumps debugging data
+# Build wrapper for firmware that automatically builds the .elf, .bin, and dumps debugging data
 def calsol_fw(env, target, srcs, includes, libs=[]):
-  ignores = ['cr_startup_lpc11.cpp']
-  srcs = [f for f in srcs if f.name not in ignores]
   prog = env.Program(target, srcs,
       CPPDEFINES=env['CPPDEFINES'] + ['GITVERSION=\\"%s\\"' % gitversion],
       CPPPATH=env['CPPPATH'] + includes,
@@ -79,20 +113,24 @@ env.AddMethod(calsol_fw, "CalSolFW")
 # TODO: perhaps move environments into SConscript, but nested variant_dirs
 # don't seem to work
 env.Append(CPPDEFINES={'MBED_CONF_PLATFORM_DEFAULT_SERIAL_BAUD_RATE': 115200})
-env.Append(FLASHINTERFACE='interface/cmsis-dap.cfg')
 
 env_orig = env
 
-env = env_orig.Clone(FLASHTARGETCFG='lpc1549_openocd.cfg')
+env = env_orig.Clone(FLASHINTERFACE='interface/cmsis-dap.cfg', FLASHTARGETCFG='lpc1549_openocd.cfg')
 SConscript('SConscript-env-lpc1549', variant_dir='build/lpc1549', exports='env', duplicate=0)
 SConscript('calsol-fw-libs/SConscript', variant_dir='build/lpc1549-libs', exports='env', duplicate=0)
 env_lpc1549 = env
+
+env = env_orig.Clone(FLASHINTERFACE='interface/stlink-v2-1.cfg', FLASHTARGETCFG='target/stm32f3x.cfg')
+SConscript('SConscript-env-stm32f303', variant_dir='build/stm32f303', exports='env', duplicate=0)
+SConscript('calsol-fw-libs/SConscript', variant_dir='build/stm32f303-libs', exports='env', duplicate=0)
+env_stm32f303 = env
 
 ###
 ### Actual build targets here
 ###
 all_targets = SConscript('SConscript', variant_dir='build', 
-    exports=['env_lpc1549'], duplicate=0)
+    exports=['env_lpc1549', 'env_stm32f303'], duplicate=0)
 
 ###
 ### Convenience targets
