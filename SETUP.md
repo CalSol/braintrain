@@ -25,28 +25,28 @@ Follow the [official instructions](https://docs.platformio.org/en/latest/integra
 
 1.  Open the project, by clicking "Open Project" from the PIO Home page, then navigate to where you cloned this repo (platformio.ini should be in this folder).
 
-    ![PlatformIO home page](images/VSCode_PIO_home.png)
+    ![PlatformIO home page](docs/VSCode_PIO_home.png)
 
     - If this isn't visible, you may need to select the PlatformIO tab on the far left, then navigate to PIO Home > Open.
 
-      ![PlatformIO home page](images/VSCode_PIO_open.png)
+      ![PlatformIO home page](docs/VSCode_PIO_open.png)
 
 1.  If the project loaded correctly, you should be able to see the list of targets on the PlatformIO tab on the left side:
     
-    ![PlatformIO tab with list of environments](images/VSCode_PIO_environments.png)
+    ![PlatformIO tab with list of environments](docs/VSCode_PIO_environments.png)
     
 1.  Expand one of those targets (such as datalogger shown above) to see the available options.
 
 1.  Click "Build" to compile firmware for that target, without uploading to the board.
     > Common operations are also available on the bottom toolbar.
     >
-    > ![VSCode bottom toolbar / statusbar](images/VSCode_PIO_statusbar.png)
+    > ![VSCode bottom toolbar / statusbar](docs/VSCode_PIO_statusbar.png)
     >
     > For example, the check mark also performs a build.
     
 1.  To upload and run in debug mode, navigate to the Debug tab on the left side:
 
-    ![Debug tab with configuration](images/VSCode_DebugConfigs.png)
+    ![Debug tab with configuration](docs/VSCode_DebugConfigs.png)
     
     From the dropdown, select the "skip Pre-Debug" configuration (as indicated in the picture).
     > The normal (non skip Pre-Debug) configuration unnecessarily compiles the firmware twice and takes more time to launch.
@@ -59,10 +59,10 @@ Follow the [official instructions](https://docs.platformio.org/en/latest/integra
     > Although there is also an Upload option, that seems broken and its usage is not recommended.
     
     You may need to switch to the Debug Console to see the compile and upload progress:
-    ![Debug console example](images/VSCode_Terminal_DebugConsole.png)
+    ![Debug console example](docs/VSCode_Terminal_DebugConsole.png)
     
 1.  When upload completes (and debugging starts), it will breakpoint (pause the microcontroller) by default right before entering `main`.
-    From the debug controls toolbar ![Debug controls toolbar](images/VSCode_DebugControls.png), you can resume, pause, and single-step through code.
+    From the debug controls toolbar ![Debug controls toolbar](docs/VSCode_DebugControls.png), you can resume, pause, and single-step through code.
     Mouse-over the buttons for descriptions and hotkeys.
     > Step-over runs the current line of code (even if it's a function call), then pauses at the beginning of the next line.
     > Step-into steps into the function at the current line of code, pausing at the beginning of the first line in that function.
