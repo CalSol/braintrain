@@ -5,33 +5,19 @@ These use CalSol's BRAINv3, a LPC1549-based microcontroller board.
 
 Labs currently available:
 - [Lab 1: Embedded Introduction](lab1.md)
-- [Lab 2: CAN Bus and Multitasking](lab2.md)
+- ~~[Lab 2: CAN Bus and Multitasking](lab2.md)~~ (needs to be updated)
 
 Coming soon:
 - Suggest something!
 
+
+## Setup
+To get started, you need to setup the PlatformIO build system and clone this repository.
+Follow the [detailed setup instructions](SETUP.md).
+
+
 ## Quick Reference
-To clone the repository and initialize the submodules in it:
+To upload firmware to the board from the command line, run:
 ```
-git clone https://github.com/CalSol/braintrain.git
-cd braintrain
-git submodule update --init --recursive
+pio run -t upload
 ```
-
-Detailed instructions for setting up the build system are in [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#setup).
-In short, you will need to install GCC-ARM, SCons, and OpenOCD, all of which are available for Windows, Linux, and Mac.
-
-To sanity-check the build and flashing system, run (inside the `braintrain` folder):
-```
-scons flash-braintest
-```
-to flash stock code that cycles the hue of the RGB LED and toggles the two side LEDs.
-Pressing the user button should pause the hue and LED toggling.
-See [Lab 1](lab1.md) for more details.
-
-To build and flash your code (in `src/main.cpp`), run:
-```
-scons flash-brain
-```
-
-![BRAIN pinouts](docs/brain-cheat.png)
