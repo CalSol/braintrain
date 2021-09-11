@@ -2,19 +2,19 @@
 
 #include "ledutils.h"
 
-PwmOut ledR(P0_5);
-PwmOut ledG(P0_6);
-PwmOut ledB(P0_7);
+DigitalOut led1(LED1);
 
-DigitalOut led1(P0_3);
-DigitalOut led2(P0_9);
+// Replace pin assignments if different
+PwmOut ledR(PA_11);
+PwmOut ledG(PB_5);
+PwmOut ledB(PB_4);
 
-DigitalIn btn(P0_4);
+DigitalIn btn(PA_8, PullUp);
 
-RawSerial serial(P0_8, NC, 115200);
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
 
 int main() {
-  ledR.write(1);
-  ledG.write(1);
-  ledB.write(1);
+  ledR.write(0);
+  ledG.write(0);
+  ledB.write(0);
 }

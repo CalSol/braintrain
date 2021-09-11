@@ -31,3 +31,6 @@ build/
 
 # Language settings xml files.
 language.settings.xml
+
+# PlatformIO builds
+.pio
