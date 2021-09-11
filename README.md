@@ -1,8 +1,6 @@
 # braintrain
 These are a series of introductory self-paced labs teaching beginning embedded software engineering concepts.
 
-These use CalSol's BRAINv3, a LPC1549-based microcontroller board.
-
 Labs currently available:
 - [Lab 1: Embedded Introduction](lab1.md)
 - ~~[Lab 2: CAN Bus and Multitasking](lab2.md)~~ (needs to be updated)
