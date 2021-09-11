@@ -43,6 +43,6 @@ int main() {
     ledG = g;
     ledB = b;
 
-    wait(1.0/1200);
+    wait_us(1000000 / 1200);
   }
 }
