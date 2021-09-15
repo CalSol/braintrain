@@ -16,18 +16,25 @@
 *.a
 
 # Eclipse Environment Metadata
-.project
-.cproject
 .metadata
 .settings
-.pydevproject
 
 # OSX annoyances
 *.DS_Store
 
+# Top-level IDE configurations
+.cproject
+.project
+.pydevproject
+.vscode
+
 # SCons build artifacts
 .sconsign.dblite
 build/
+*.pyc
 
 # Language settings xml files.
 language.settings.xml
+
+# PlatformIO builds
+.pio

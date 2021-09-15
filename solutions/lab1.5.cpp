@@ -2,16 +2,16 @@
 
 #include "ledutils.h"
 
-PwmOut ledR(P0_5);
-PwmOut ledG(P0_6);
-PwmOut ledB(P0_7);
+DigitalOut led1(LED1);
 
-DigitalOut led1(P0_3);
-DigitalOut led2(P0_9);
+// Replace pin assignments if different
+PwmOut ledR(D10);
+PwmOut ledG(D11);
+PwmOut ledB(D12);
 
-DigitalIn btn(P0_4);
+DigitalIn btn(D9, PullUp);
 
-RawSerial serial(P0_8, NC, 115200);
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
 
 int main() {
   serial.puts("\r\n\r\n" __FILE__ ", built " __DATE__ " " __TIME__ "\r\n");
@@ -43,6 +43,6 @@ int main() {
     ledG = g;
     ledB = b;
 
-    wait(1.0/1200);
+    wait_us(1000000 / 1200);
   }
 }

@@ -22,39 +22,39 @@ A microcontroller is a full computer system on a chip, including a CPU, program 
 This lab will walk through some simple examples to get started.
 
 ## Sanity Check
-If you want to sanity-check your BRAINv3.3 hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and BRAIN connected)
+If you want to sanity-check your hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and board connected)
 ```
-scons flash-braintest
+pio run -e solution_1_5 -t upload
 ```
 
-This should fade the RGB LED through all the colors over a period of 3 seconds, toggling the side LEDs every half-period. Pressing the user button (left one) should pause the sequence. If any of this doesn't work, then something is wrong with your setup and needs to be fixed before proceeding further.
+This should fade the RGB LED through all the colors over a period of 3 seconds.
 
 ## Lab 1.1: Getting started
 > Do these before the lab:
 >
-> 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead. In the future, we may add instructions for using the mbed online compiler._
+> 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead._
 
 1. If doing this lab during one of the scheduled training sessions, consider pairing up.
-1. Clone this repository. You may also set up this repository under Eclipse (similarly to [Tachyon-FW](https://github.com/CalSol/Tachyon-FW#project-configuration)), or use command-line scons and openocd.
+1. Clone this repository.
 
 ## Lab 1.2: "Hello, world"
 While the typical programming "Hello, world" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "hello, world": the blinking LED.
 
-Start by taking a look at [src/main.cpp](src/main.cpp). At the top, you will see mbed object declarations that assign certain functionality (like `DigitalOut`) to pins (like `P0_3`):
+Start by taking a look at [src/main.cpp](src/main.cpp). At the top, you will see mbed object declarations that assign certain functionality (like `DigitalOut`) to pins (like `D10`):
 
 ```c++
 #include "mbed.h"
 
-PwmOut ledR(P0_5);
-PwmOut ledG(P0_6);
-PwmOut ledB(P0_7);
+DigitalOut led1(LED1);
 
-DigitalOut led1(P0_3);
-DigitalOut led2(P0_9);
+// Replace pin assignments if different
+PwmOut ledR(D10);
+PwmOut ledG(D11);
+PwmOut ledB(D12);
 
-DigitalIn btn(P0_4);
+DigitalIn btn(D9, PullUp);
 
-RawSerial serial(P0_8, NC, 115200);
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
 ```
 
 **Objective**: for this first part will be to alternate the left LED (`led1`, on `P0_3`) and the right LED (`led2`, on `P0_9`) on and off, at once full cycle (left on, then right on) per second.
@@ -110,9 +110,9 @@ will delay by 100ms. This may be useful for getting the (approximate) 1Hz blink 
 
 Done? Build and flash firmware by running:
 ```
-scons flash-brain
+pio run -t upload
 ```
-outside the `src` folder (inside the `braintrain` folder) or doing the equivalent from inside Eclipse.
+outside the `src` folder (inside the `braintrain` folder) or doing the equivalent from inside VSCode.
 
 You can also compare against [the solution here](solutions/lab1.2.cpp).
 
@@ -211,7 +211,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 1. Start with a [HSV (hue, saturation, and value)](https://en.wikipedia.org/wiki/HSL_and_HSV) representation of color. We'll work with floating point (`float`) data types for now.
 
   > At a high level, the values in HSV represent:
-  > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
+  > - Hue: the color, ranging between [0, 360ï¿½). For our purposes, 0ï¿½ is red, 120ï¿½ is green, and 240ï¿½ is blue. Values inbetween are interpolated, so 60ï¿½ is yellow, 180ï¿½ is cyan, and 300ï¿½ is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
 
@@ -225,7 +225,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 6. Write the brightness to the output.
 
 ### Incrementing the hue
-This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
+This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360ï¿½ every 3 seconds, that comes out to (360ï¿½ / 3 / 1200) = 0.1ï¿½ per tick and 1/1200 s between ticks.
 
 ```c++
 int main() {
@@ -321,7 +321,7 @@ Why is some seemingly simple arithmetic so expensive? Because of the use of floa
 **Objective**: Optimize computation so the LED hue period is closer to 3 s.
 
 Here, we'll define hue, saturation, and value as 16-bit unsigned integers (`uint16_t`, range of [0, 65535]):
-- Hue will be defined as 100x degree. So 0 is still 0°, but 12000 will be 120°. This gives us an effective resolution of 0.01°.
+- Hue will be defined as 100x degree. So 0 is still 0ï¿½, but 12000 will be 120ï¿½. This gives us an effective resolution of 0.01ï¿½.
 - Saturation and value will be re-normalized to 65535 being full value. (so 0 still corresponds to 0%, 32768 is approximately 50%, and 65535 is 100%).
 
 ### Re-defining and incrementing hue
