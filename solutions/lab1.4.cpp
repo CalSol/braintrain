@@ -15,7 +15,15 @@ DigitalIn btn(D8, PullUp);
 
 int main() {
   /* YOUR INITIALIZATION HERE */
+  serial.puts("\r\n\r\n" __FILE__ ", built " __DATE__ " " __TIME__ "\r\n");
+
   while (true) {
     /* YOUR CODE HERE */
+    led1 = 1;
+    serial.printf("led1=%d\r\n", (int)led1);
+    wait(0.5);
+    led1 = 0;
+    serial.printf("led1=%d\r\n", (int)led1);
+    wait(0.5);
   }
 }

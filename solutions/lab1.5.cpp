@@ -4,14 +4,14 @@
 
 DigitalOut led1(LED1);
 
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
+
 // Replace pin assignments if different
-PwmOut ledR(D10);
+PwmOut ledR(D9);
 PwmOut ledG(D11);
 PwmOut ledB(D12);
 
-DigitalIn btn(D9, PullUp);
-
-RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
+DigitalIn btn(D8, PullUp);
 
 int main() {
   serial.puts("\r\n\r\n" __FILE__ ", built " __DATE__ " " __TIME__ "\r\n");

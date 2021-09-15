@@ -17,5 +17,9 @@ int main() {
   /* YOUR INITIALIZATION HERE */
   while (true) {
     /* YOUR CODE HERE */
+    led1 = 1;
+    wait(0.5);
+    led1 = 0;
+    wait(0.5);
   }
 }
