@@ -43,6 +43,7 @@ int main() {
     ledG = g;
     ledB = b;
 
+    while (!btn);
     wait_us(1000000 / 1200);
   }
 }

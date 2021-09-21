@@ -17,57 +17,76 @@ Objectives
 ## Introduction
 In the context of CalSol, an embedded system refers to a microcontroller-based system, which runs code (firmware) that interacts with (through inputs such as sensors or buttons, and outputs such as actuators or LEDs) the physical world.
 
-A microcontroller is a full computer system on a chip, including a CPU, program memory, data memory, and IO. You'll be working with the BRAINv3.3 (which you've already soldered), containing a LPC1549 that has a (up to) 72 MHz Cortex-M3 processor, 256 KiB of FLASH program memory, 4 KiB of data memory, and 30 IO pins. We've also standardized on using the [mbed](https://www.mbed.com/en/) library to present a nicer API to control the underlying hardware.
+A microcontroller is a full computer system on a chip, including a CPU, flash, RAM, and IO. You'll be working with the [NUCLEO-F042K6](https://os.mbed.com/platforms/ST-Nucleo-F042K6/) containing an STM32F042K6 that has a (up to) 48 MHz Cortex-M0 processor, 32 KiB of flash memory, 6 KiB of RAM, and various IO.
 
-This lab will walk through some simple examples to get started.
+We've also standardized on using the [PlatformIO](https://platformio.org) IDE and [Mbed](https://os.mbed.com) framework to provide a streamlined development process and nicer API to control the underlying hardware.
+
+This lab will walk through some simple examples to get started. If doing this lab during one of the scheduled training sessions, consider pairing up.
+
+## Hardware Setup
+
+Before we get to coding, we need to setup the NUCLEO-F042K6 on a breadboard and connect an RGB LED and button to it. Breadboards are internally connected like in the following picture.
+
+![breadboard](docs/breadboard_internals.png)
+
+Here's the pinout for the Nucleo.
+
+![f042k6](https://os.mbed.com/media/uploads/bcostm/nucleo_f042k6_2017_10_10.png)
+
+Ultimately, we want our circuit to match the following schematic.
+
+![schematic](docs/circuit_breadboard.png)
+
+To make things easier, here's a diagram of how your breadboard could be hooked up (there's an infinite number of ways this is just one). The orange leg (common anode) of the RGB LED is the longest leg.
+
+![diagram](docs/breadboard_nucleo.png)
 
 ## Sanity Check
-If you want to sanity-check your hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and board connected)
+If you want to sanity-check your hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and board connected).
 ```
-pio run -e solution_1_5 -t upload
+pio run -e sanity -t upload
 ```
 
-This should fade the RGB LED through all the colors over a period of 3 seconds.
+While most of this lab refers to CLI commands to work with PlatformIO, you can always just use PlatformIO's GUI instead.
+
+This should fade the RGB LED through all the colors over a period of 3 seconds. If you press the button at anytime, it should pause this fading until the button is released.
 
 ## Lab 1.1: Getting started
-> Do these before the lab:
->
-> 1. Set up [the build system](https://github.com/CalSol/Tachyon-FW#setup). _If your focus isn't electrical, you may pair up with someone who has this set up instead._
 
-1. If doing this lab during one of the scheduled training sessions, consider pairing up.
+1. If you haven't already done so, set up [the build system](SETUP.md).
 1. Clone this repository.
 
-## Lab 1.2: "Hello, world"
-While the typical programming "Hello, world" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "hello, world": the blinking LED.
+## Lab 1.2: "Hello, World!"
+While the typical programming "Hello, World!" is to print text on a screen, we don't have a screen on our BRAINs. Instead, we will do the typical embedded "Hello, World!": the blinking LED.
 
-Start by taking a look at [src/main.cpp](src/main.cpp). At the top, you will see mbed object declarations that assign certain functionality (like `DigitalOut`) to pins (like `D10`):
+Start by taking a look at [src/main.cpp](src/main.cpp). At the top, you will see Mbed object declarations that assign certain functionality (like `DigitalOut`) to pins (like `D10`):
 
 ```c++
 #include "mbed.h"
 
 DigitalOut led1(LED1);
 
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
+
 // Replace pin assignments if different
-PwmOut ledR(D10);
+PwmOut ledR(D9);
 PwmOut ledG(D11);
 PwmOut ledB(D12);
 
-DigitalIn btn(D9, PullUp);
-
-RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
+DigitalIn btn(D8, PullUp);
 ```
 
-**Objective**: for this first part will be to alternate the left LED (`led1`, on `P0_3`) and the right LED (`led2`, on `P0_9`) on and off, at once full cycle (left on, then right on) per second.
+**Objective**: Flash the on-board LED (led1) at 1 Hz. That is, turn it on and off once per second.
 
 > LEDs are electronic devices that emit light when current flows through them from anode (A) to cathode (K).
 >
-> The circuit on the BRAINv3.3 for the left and right LEDs is:
+> The circuit on the NUCLEO-F303K8 for on-board LED is:
 >
 > ![Image](docs/led.png?raw=true)
 >
 > The LED turns on (emits light) when the pin voltage is high.
 
-mbed's [DigitalOut](https://developer.mbed.org/handbook/DigitalOut) provides a way to control an IO pin as a digital output - the pin can be set low (0v in this case) or high (3.3v in this case). Note that from the [example and API docs](https://developer.mbed.org/handbook/DigitalOut), this can be done by assigning 0 or 1 to the object. For example,
+Mbed's [DigitalOut](https://os.mbed.com/docs/mbed-os/latest/apis/digitalout.html) provides a way to control an IO pin as a digital output - the pin can be set low (0v in this case) or high (3.3v in this case). Note that from the [example and API docs](https://os.mbed.com/docs/mbed-os/latest/apis/digitalout.html), this can be done by assigning 0 or 1 to the object. For example,
 
 ```c++
 led1 = 1; //or
@@ -100,7 +119,7 @@ Feel free to try playing with the LEDs by writing some code and deploying it.
 >
 > This has been structured as typical embedded code: an (optional) initialization section, followed by code repeating forever in a main loop. This is normal because we want the code to run forever as long as there is power. Usually it is not that useful if the code runs once on boot and not again until it is reset or the power is cycled.
 
-mbed also has basic timing functions, like [wait](https://developer.mbed.org/handbook/Wait), that waits for (approximately) some specified number of seconds regardless of the underlying hardware characteristics (like processor speed). For example,
+Mbed also has basic timing functions, like [wait](https://os.mbed.com/docs/mbed-os/latest/apis/wait.html), that waits for (approximately) some specified number of seconds regardless of the underlying hardware characteristics (like processor speed). For example,
 
 ```c++
 wait(0.1)
@@ -117,11 +136,11 @@ outside the `src` folder (inside the `braintrain` folder) or doing the equivalen
 You can also compare against [the solution here](solutions/lab1.2.cpp).
 
 ## Lab 1.3: Now with _inputs_!
-A system that only produces outputs isn't much fun. Let's do something with the user button (the left one).
+A system that only produces outputs isn't much fun. Let's do something with the button.
 
 **Objective**: Pause the blinking as long as the button is pressed.
 
-Like DigitalOut, mbed also has a [DigitalIn](https://developer.mbed.org/handbook/DigitalIn) that allows it to read the logic level on a pin, also as either low (0v to some threshold, in this case) or high (some threshold to 3.3v, in this case). Since `DigitalIn` provides an implicit cast to an `int`, it can be used anywhere that expects an `int` such as a conditional:
+Like DigitalOut, mbed also has a [DigitalIn](https://os.mbed.com/docs/mbed-os/latest/apis/digitalin.html) that allows it to read the logic level on a pin, also as either low (0v to some threshold, in this case) or high (some threshold to 3.3v, in this case). Since `DigitalIn` provides an implicit cast to an `int`, it can be used anywhere that expects an `int` such as a conditional:
 
 ```c++
 if (!btn) {
@@ -131,11 +150,11 @@ if (!btn) {
 
 > Switches are electronic devices that connect (or disconnect, in some cases) a circuit when pressed.
 >
-> The circuit on the BRAINv3.3 for the user button is:
+> The circuit for the button we connected is similar to this:
 >
 > ![Image](docs/switch.png?raw=true)
 >
-> Commonly, user buttons are designed like this: a resistor pulls up the pin high when the switch is not pressed, and the switch shorts the pin low when the button is pressed. This also explains the inversion (`!btn`) in the example above to detect a pressed (low) state.
+> Commonly, user buttons are designed like this: a resistor pulls up the pin high when the switch is not pressed, and the switch shorts the pin low when the button is pressed. This also explains the inversion (`!btn`) in the example above to detect a pressed (low) state. In our case, the Nucleo has a software configurable pull-up resistor builtin so we don't need to connect one ourselves externally.
 
 Done? Compare against [one possible solution here](solutions/lab1.3.cpp).
 
@@ -143,21 +162,19 @@ You may realize that while the high-level objective (pause blinking) might appea
 
 > Switches also suffer from mechanical bounce, where during press or release, the switch may jump between connected and disconnected several times before settling down. For applications which rely on edge detection (the high to low or low to high transition on the input) and sample fast enough, this may cause it to register false edges. Two common methods to "debounce" switches are either with a RC (resistor-capacitor) circuit or with filtering software.
 
-## Lab 1.4: "Hello, world", but for reals
-Most programmers will find a `printf` like utility to be very helpful. Let's get a terminal up and running and displaying data from your BRAIN.
+## Lab 1.4: "Hello, World!", but for reals
+Most programmers will find a `printf` like utility to be very helpful. Let's get a terminal up and running and displaying data from your Nucleo.
 
-**Objective**: Print versioning information (build time) on system start, and print `led1=x` (where `x` is the state of `led1`, either 0 or 1) every toggle.
+**Objective**: Print versioning information (build time) on system start and then start flashing led1 at 1 Hz. Print `led1=x` (where `x` is the state of `led1`, either 0 or 1) every toggle.
 
-mbed's [RawSerial](https://developer.mbed.org/users/mbed_official/code/mbed/docs/252557024ec3/classmbed_1_1RawSerial.html) provides access to a UART, a hardware block commonly used for sending text data to a host PC. Assuming everything is set up correctly (BRAINv3.3 connected to a debugger adapter that interprets the TDO/SDO pin as serial data - which should be all CalSol ST-Link clones), you should be seeing text from the BRAIN soon.
+Mbed's [RawSerial](https://os.mbed.com/docs/mbed-os/v5.15/apis/rawserial.html) provides access to a UART, a hardware block commonly used for sending text data to a host PC.
 
-> [UART (universal asynchronous receiver transmitter)](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter)  transmits a frame of data (typically a byte, or 8 bits) serially (that is, one at a time: each bit is placed on the digital line for some duration before the next bit is "shifted out"). Since there is no external clock (defining when bits transition), both the receiver and transmitter must agree on baud rate (bit rate).
+> [UART (universal asynchronous receiver-transmitter)](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter)  transmits a frame of data (typically a byte, or 8 bits) serially (that is, one at a time: each bit is placed on the digital line for some duration before the next bit is "shifted out"). Since there is no external clock (defining when bits transition), both the receiver and transmitter must agree on baud rate (bit rate).
 >
 > Here, we initialize the UART at 115200 baud, which is one of the faster but still common rates.
 
 
-> RawSerial vs. Serial: mbed also offers a [Serial](https://developer.mbed.org/handbook/Serial) interface, which provides an additional file-like abstraction. We don't need that, so we don't use it, preferring to use the more lightweight RawSerial directly.
-
-<a name="serial-port"></a>
+> RawSerial vs. Serial: mbed also offers a [Serial](https://os.mbed.com/docs/mbed-os/v5.15/apis/serial.html) interface, which provides an additional file-like abstraction. We don't need that, so we don't use it, preferring to use the more lightweight RawSerial directly.
 
 To connect to the serial terminal on your PC:
 - For Windows:
@@ -172,6 +189,7 @@ To connect to the serial terminal on your PC:
   - To view Serial output we will use minicom. Open up a terminal window and install it with `brew install minicom`.
   - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\tty.usb` and then press tab to autocomplete the device name. If you have trouble ask someone.
   - To exit minicom, press `ESC-Shift-z`, and then use the exit command `Shift-x`
+  - There are other alternatives such as [SerialTools](https://apps.apple.com/us/app/serialtools/id611021963?mt=12) and `screen`.
 
 - For Linux:
   - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
@@ -202,7 +220,7 @@ serial.printf("led value is %u\r\n", (int)led1);
 Now put all the pieces together and code up the full objective. The [solution is here](solutions/lab1.4.cpp) when you're ready.
 
 ## Lab 1.5: "Hello, world", _in color_
-We've covered the basics, but that's still kind of boring. Especially since we have a RGB LED on each BRAIN - we might as well do something cool and fun with it!
+We've covered the basics, but that's still kind of boring. Let's do something cool and fun with the RGB LED!
 
 **Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz. By updating the LED at a higher rate, the color transitions will appear smoother (although 120Hz is already rather smooth to the human eye).
 
@@ -211,7 +229,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 1. Start with a [HSV (hue, saturation, and value)](https://en.wikipedia.org/wiki/HSL_and_HSV) representation of color. We'll work with floating point (`float`) data types for now.
 
   > At a high level, the values in HSV represent:
-  > - Hue: the color, ranging between [0, 360�). For our purposes, 0� is red, 120� is green, and 240� is blue. Values inbetween are interpolated, so 60� is yellow, 180� is cyan, and 300� is purple.
+  > - Hue: the color, ranging between [0, 360°). For our purposes, 0° is red, 120° is green, and 240° is blue. Values inbetween are interpolated, so 60° is yellow, 180° is cyan, and 300° is purple.
   > - Saturation: colorfulness of a color, normalized to [0, 1] here, with 1 being a pure color.
   > - Value: brightness, normalized to [0, 1] here, with 0 being off and 1 being full brightness.
 
@@ -225,7 +243,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 6. Write the brightness to the output.
 
 ### Incrementing the hue
-This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360� every 3 seconds, that comes out to (360� / 3 / 1200) = 0.1� per tick and 1/1200 s between ticks.
+This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
 
 ```c++
 int main() {
@@ -295,7 +313,7 @@ When we want full brightness (1), we need to actually write the opposite (0) to 
 ### Writing out the brightness
 What we want to do is to dim the LED, but we only have digital outputs on the LEDs. Instead, we take advantage of persistence of vision, where average intensity over a short amount of time is perceived. If we blink a LED on and off really fast, the perceived intensity will be the _duty cycle_, or on time divided by the total period (on time plus off time).
 
-This can be done in software, but modern microcontrollers have [pulse-width modulation](https://en.wikipedia.org/wiki/Pulse-width_modulation) peripherals to handle this for you. mbed provides an interface through [PwmOut](https://developer.mbed.org/handbook/PwmOut), where you assign the output duty cycle as a float:
+This can be done in software, but modern microcontrollers have [pulse-width modulation](https://en.wikipedia.org/wiki/Pulse-width_modulation) peripherals to handle this for you. Mbed provides an interface through [PwmOut](https://os.mbed.com/docs/mbed-os/latest/apis/pwmout.html), where you assign the output duty cycle as a float:
 
 ```c++
 ledR = 0.25;
@@ -321,7 +339,7 @@ Why is some seemingly simple arithmetic so expensive? Because of the use of floa
 **Objective**: Optimize computation so the LED hue period is closer to 3 s.
 
 Here, we'll define hue, saturation, and value as 16-bit unsigned integers (`uint16_t`, range of [0, 65535]):
-- Hue will be defined as 100x degree. So 0 is still 0�, but 12000 will be 120�. This gives us an effective resolution of 0.01�.
+- Hue will be defined as 100x degree. So 0 is still 0°, but 12000 will be 120°. This gives us an effective resolution of 0.01°.
 - Saturation and value will be re-normalized to 65535 being full value. (so 0 still corresponds to 0%, 32768 is approximately 50%, and 65535 is 100%).
 
 ### Re-defining and incrementing hue
@@ -361,7 +379,7 @@ b = (uint32_t)b * b / 65535;
 This is (once again!) left as an exercise for the reader. Make sure to subtract from the scaled maximum value.
 
 ### Writing out the brightness
-mbed's PwmOut API doesn't provide a fixed-point implementation for setting PWM duty cycle. While we could convert our fixed-point result to floating-point and pass that into the PwmOut object, that would still incur several floating-point operations.
+Mbed's PwmOut API doesn't provide a fixed-point implementation for setting PWM duty cycle. While we could convert our fixed-point result to floating-point and pass that into the PwmOut object, that would still incur several floating-point operations.
 
 Instead, we will use PwmOut's `pulsewidth_us` function to set the on-time in microseconds directly. Since we've set the period at 500 us, we can just re-normalize the variables to 500:
 

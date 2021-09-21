@@ -1,4 +1,5 @@
 {
+    "macros": ["NDEBUG=1"],
     "requires": ["bare-metal"],
     "target_overrides": {
         "*": {
