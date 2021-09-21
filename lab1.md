@@ -177,6 +177,13 @@ Mbed's [RawSerial](https://os.mbed.com/docs/mbed-os/v5.15/apis/rawserial.html) p
 > RawSerial vs. Serial: mbed also offers a [Serial](https://os.mbed.com/docs/mbed-os/v5.15/apis/serial.html) interface, which provides an additional file-like abstraction. We don't need that, so we don't use it, preferring to use the more lightweight RawSerial directly.
 
 To connect to the serial terminal on your PC:
+- In VSCode:
+  - In the status bar on the bottom,
+
+    ![Image](docs/VSCode_PIO_StatusBar.png?raw=true)
+
+    click on the serial monitor icon ![Image](docs/VSCode_PIO_SerialMonitor.png?raw=true)
+
 - For Windows:
   - Open up the Device Manager and find the COM port (like COM4) for USB Serial Device.
 
@@ -222,7 +229,7 @@ Now put all the pieces together and code up the full objective. The [solution is
 ## Lab 1.5: "Hello, world", _in color_
 We've covered the basics, but that's still kind of boring. Let's do something cool and fun with the RGB LED!
 
-**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 1,200 Hz. By updating the LED at a higher rate, the color transitions will appear smoother (although 120Hz is already rather smooth to the human eye).
+**Objective**: Fade the RGB LED through the 6 hues (red - yellow - green - cyan - blue - purple) at one cycle per 3 seconds. Since we're bleeding edge (and 120 Hz displays are _so last year_), update the LED output at 2,400 Hz. By updating the LED at a higher rate, the color transitions will appear smoother (although 120Hz is already rather smooth to the human eye).
 
 Since this is a non-trivial task, we'll break it down into several parts:
 
@@ -243,7 +250,7 @@ Since this is a non-trivial task, we'll break it down into several parts:
 6. Write the brightness to the output.
 
 ### Incrementing the hue
-This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 1200) = 0.1° per tick and 1/1200 s between ticks.
+This can be done by declaring a local variable, `hue`, outside the main loop, and incrementing it in the main loop. Since we know we want to update at 1,200 Hz and go through 360° every 3 seconds, that comes out to (360° / 3 / 2400) = 0.05° per tick and 1/2400 s between ticks.
 
 ```c++
 int main() {
@@ -252,7 +259,7 @@ int main() {
   while (true) {
     hue += 0.1;
 
-    wait(1.0/1200);
+    wait_us(1000000 / 2400);
   }
 }
 ```
@@ -332,7 +339,7 @@ ledB.period_us(500);
 Once you've put everything together, you can take a look at [the solution here](solutions/lab1.5.cpp).
 
 ## Extra for Experts Lab 1.6: Embedded constraints
-If you timed a full hue cycle in the previous section, you will note that it actually takes around 4-5 seconds. Our delay calculations were fine, but those failed to account for compute overhead which make up a non-negligible portion of the 1/1200s = 833 us tick cycle. In fact, if you time just the `hsv_to_rgb_float`, the squaring, and the inversion code, those take between 259 and 302 us (or approximately 3,100 to 3,600 instructions at 12 MHz).
+If you timed a full hue cycle in the previous section, you will note that it actually takes around 4-5 seconds. Our delay calculations were fine, but those failed to account for compute overhead which make up a non-negligible portion of the 1/2400s = 417 us tick cycle.
 
 Why is some seemingly simple arithmetic so expensive? Because of the use of floating point - unlike a PC, lower-end microcontrollers don't have built-in floating point hardware and must emulate it in software, so each operation takes many instruction cycles. Since we really have no need for floating point here (other than laziness), we can re-write it in fixed point, with integer types.
 
@@ -350,10 +357,10 @@ int main() {
   uint16_t hue = 0;
 
   while (true) {
-    hue += 10;  // 0.1 degree * 100
+    hue += 5;  // 0.05 degree * 100
     hue = hue % 36000;  // 360 degree * 100
 
-    wait(1.0/1200);
+    wait_us(1000000 / 2400);
   }
 }
 ```
