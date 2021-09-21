@@ -177,29 +177,38 @@ Mbed's [RawSerial](https://os.mbed.com/docs/mbed-os/v5.15/apis/rawserial.html) p
 > RawSerial vs. Serial: mbed also offers a [Serial](https://os.mbed.com/docs/mbed-os/v5.15/apis/serial.html) interface, which provides an additional file-like abstraction. We don't need that, so we don't use it, preferring to use the more lightweight RawSerial directly.
 
 To connect to the serial terminal on your PC:
-- In VSCode:
-  - In the status bar on the bottom,
+- <details>
+    <summary>In VSCode, with Serial Monitor</summary>
 
-    ![Image](docs/VSCode_PIO_StatusBar.png?raw=true)
+    - In the status bar on the bottom,
 
-    click on the serial monitor icon ![Image](docs/VSCode_PIO_SerialMonitor.png?raw=true)
+      ![Image](docs/VSCode_PIO_StatusBar.png?raw=true)
 
-- For Windows:
-  - Open up the Device Manager and find the COM port (like COM4) for USB Serial Device.
+      click on the serial monitor icon ![Image](docs/VSCode_PIO_SerialMonitor.png?raw=true)
+  </details>
+- <details>
+    <summary>On Windows, with PuTTY</summary>
 
-    ![Image](docs/windows-device-manager.png?raw=true)
-  - Open up a serial terminal (like [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), and connect to the COM port you found (above) at 115200 baud.
+    - Open up the Device Manager and find the COM port (like COM4) for USB Serial Device.
 
-    ![Image](docs/windows-putty.png?raw=true)
+      ![Image](docs/windows-device-manager.png?raw=true)
+    - Open up a serial terminal (like [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), and connect to the COM port you found (above) at 115200 baud.
 
-- For Mac:
-  - To view Serial output we will use minicom. Open up a terminal window and install it with `brew install minicom`.
-  - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\tty.usb` and then press tab to autocomplete the device name. If you have trouble ask someone.
-  - To exit minicom, press `ESC-Shift-z`, and then use the exit command `Shift-x`
-  - There are other alternatives such as [SerialTools](https://apps.apple.com/us/app/serialtools/id611021963?mt=12) and `screen`.
+      ![Image](docs/windows-putty.png?raw=true)
+  </details>
+- <details>
+    <summary>On Mac, with minicom</summary>
 
-- For Linux:
-  - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
+    - To view Serial output we will use minicom. Open up a terminal window and install it with `brew install minicom`.
+    - Open up a serial terminal by typing in `minicom -b 115200 -D \dev\tty.usb` and then press tab to autocomplete the device name. If you have trouble ask someone.
+    - To exit minicom, press `ESC-Shift-z`, and then use the exit command `Shift-x`
+    - There are other alternatives such as [SerialTools](https://apps.apple.com/us/app/serialtools/id611021963?mt=12) and `screen`.
+  </details>
+- <details>
+    <summary>On Linux</summary>
+
+    - You're a power user, you probably already know how. There's also way too many Linux distros out there with subtly different behaviors (like serial terminal permissions!).
+  </details>
 
 ### Display to Serial
 The simplest RawSerial operation is `puts`, which writes out the string passed into it. For example, one way to print versioning information would be:
