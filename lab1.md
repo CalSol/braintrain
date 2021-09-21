@@ -17,7 +17,7 @@ Objectives
 ## Introduction
 In the context of CalSol, an embedded system refers to a microcontroller-based system, which runs code (firmware) that interacts with (through inputs such as sensors or buttons, and outputs such as actuators or LEDs) the physical world.
 
-A microcontroller is a full computer system on a chip, including a CPU, flash, RAM, and IO. You'll be working with the [NUCLEO-F303K8](https://os.mbed.com/platforms/ST-Nucleo-F303K8/) containing an STM32F303K8 that has a (up to) 72 MHz Cortex-M4F processor, 64 KiB of flash memory, 12 KiB of RAM, and various IO.
+A microcontroller is a full computer system on a chip, including a CPU, flash, RAM, and IO. You'll be working with the [NUCLEO-F042K6](https://os.mbed.com/platforms/ST-Nucleo-F042K6/) containing an STM32F042K6 that has a (up to) 48 MHz Cortex-M0 processor, 32 KiB of flash memory, 6 KiB of RAM, and various IO.
 
 We've also standardized on using the [PlatformIO](https://platformio.org) IDE and [Mbed](https://os.mbed.com) framework to provide a streamlined development process and nicer API to control the underlying hardware.
 
@@ -25,23 +25,21 @@ This lab will walk through some simple examples to get started.
 
 ## Hardware Setup
 
-Before we get to coding, we need to setup the NUCLEO-F303K8 on a breadboard and connect an RGB LED and button to it. The pinout for the board can be found [here](https://os.mbed.com/platforms/ST-Nucleo-F303K8/). Breadboards are connected like in the following picture.
+Before we get to coding, we need to setup the NUCLEO-F042K6 on a breadboard and connect an RGB LED and button to it. Breadboards are internally connected like in the following picture.
 
-![Image](docs/breadboard.jpg?raw=true)
+![breadboard](docs/breadboard_internals.png)
 
-TODO add RGB LED pinout (common anode)
+Here's the pinout for the Nucleo.
 
-1. Plug the Nucleo, RGB LED, and button into the breadboard such that they're not yet connected to each other.
-1. Connect a 220 ohm resistor between each of the RGB LED's red, green, and blue pins and an unconnected row.
-1. Connect the RGB LED's common anode to a free 3V3 pin on the Nucleo.
-1. Connect the free end of the 220 ohm resistor for the red pin to D9 on the Nucleo.
-1. Connect the free end of the 220 ohm resistor for the green pin to D11 on the Nucleo.
-1. Connect the free end of the 220 ohm resistor for the blue pin to D12 on the Nucleo.
-1. Connect one side of the button to D8 on the Nucleo and the other side to a free GND pin.
+![f042k6](https://os.mbed.com/media/uploads/bcostm/nucleo_f042k6_2017_10_10.png)
 
-When you're finished, your breadboard should look something like the following.
+Ultimately, we want our circuit to match the following schematic.
 
-TODO add pic once parts arrive
+![schematic](docs/circuit_breadboard.png)
+
+To make things easier, here's a diagram of how your breadboard should be hooked up. The orange leg (common anode) of the RGB LED is the longest leg.
+
+![diagram](docs/breadboard_nucleo.png)
 
 ## Sanity Check
 If you want to sanity-check your hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and board connected).
