@@ -44,12 +44,12 @@ To make things easier, here's a diagram of how your breadboard should be hooked 
 ## Sanity Check
 If you want to sanity-check your hardware and build environment, you can build and flash test code with this command (run this outside the `src` folder, **inside** the `braintrain` folder, while you have the programmer and board connected).
 ```
-pio run -e sanity-t upload
+pio run -e sanity -t upload
 ```
 
 While most of this lab refers to CLI commands to work with PlatformIO, you can always just use PlatformIO's GUI instead.
 
-This should cycle through turning the onboard LED, red, green, blue LEDs on and off sequentially with 0.5s between changes. If you hold the button, there should now be 0.1s between changes.
+This should fade the RGB LED through all the colors over a period of 3 seconds. If you press the button at anytime, it should pause this fading until the button is released.
 
 ## Lab 1.1: Getting started
 
