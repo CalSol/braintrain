@@ -37,7 +37,7 @@ Ultimately, we want our circuit to match the following schematic.
 
 ![schematic](docs/circuit_breadboard.png)
 
-To make things easier, here's a diagram of how your breadboard should be hooked up. The orange leg (common anode) of the RGB LED is the longest leg.
+To make things easier, here's a diagram of how your breadboard could be hooked up (there's an infinite number of ways this is just one). The orange leg (common anode) of the RGB LED is the longest leg.
 
 ![diagram](docs/breadboard_nucleo.png)
 
