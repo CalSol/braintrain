@@ -21,7 +21,7 @@ A microcontroller is a full computer system on a chip, including a CPU, flash, R
 
 We've also standardized on using the [PlatformIO](https://platformio.org) IDE and [Mbed](https://os.mbed.com) framework to provide a streamlined development process and nicer API to control the underlying hardware.
 
-This lab will walk through some simple examples to get started.
+This lab will walk through some simple examples to get started. If doing this lab during one of the scheduled training sessions, consider pairing up.
 
 ## Hardware Setup
 
@@ -47,15 +47,13 @@ If you want to sanity-check your hardware and build environment, you can build a
 pio run -e solution_1_5 -t upload
 ```
 
-Of course, you can also just use PlatformIO's GUI.
+While most of this lab refers to CLI commands to work with PlatformIO, you can always just use PlatformIO's GUI instead.
 
 This should fade the RGB LED through all the colors over a period of 3 seconds.
 
 ## Lab 1.1: Getting started
 
-If doing this lab during one of the scheduled training sessions, consider pairing up.
-
-1. Set up [the build system](SETUP.md).
+1. If you haven't already done so, set up [the build system](SETUP.md).
 1. Clone this repository.
 
 ## Lab 1.2: "Hello, World!"
