@@ -1,19 +1,44 @@
 #include "mbed.h"
 
 #include "ledutils.h"
-
-DigitalOut led1(LED1);
-
-RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
+#include "slcan.h"
+#include <StaticQueue.h>
 
 RGBPwmOut rgbLed(D9, D11, D12);
-
+DigitalOut led1(LED1);
 DigitalIn btn(D8, PullUp);
+
+RawSerial serial(SERIAL_TX, SERIAL_RX, 115200);
 
 CAN can(D10, D2);
 
 const uint16_t DEBOUNCE_TIME_MS = 50;
 const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
+
+// CAN message transmit helper to echo messages over SLCAN
+static bool transmitAndEchoCANMessage(const CANMessage& msg) {
+  if (can.write(msg) == 1) {
+    // Echo anything that at least made it to the CAN controller
+    // This does not imply that the message was acknowledged.
+    if (serial.configured()) {
+      slcan.putCANMessage(msg);
+    }
+    return true;
+  }
+  return false;
+}
+
+StaticQueue<CANMessage, 16> slcanTransmitQueue;
+
+// Helper to allow the host to send CAN messages
+static bool transmitCANMessage(const CANMessage& msg) {
+  if (can.write(msg)) {
+    slcanTransmitQueue.enqueue(msg);
+    return true;
+  } else {
+    return false;
+  }
+}
 
 int main() {
   // LED Blink State
@@ -32,10 +57,18 @@ int main() {
   can.frequency(1000000);
   can.reset();
 
+  // Allow the SLCAN interface to transmit messages
+  slcan.setTransmitHandler(&transmitCANMessage);
+
+  // Silently ignore commands to change the mode/bitrate
+  // for compatibility with USBtinViewer
+  slcan.setIgnoreConfigCommands(true);
+
   while (true) {
     // CAN receive handling
     CANMessage msg;
-    while (can.read(msg)) {
+    while (slcanTransmitQueue.dequeue(&msg) || can.read(msg)) {
+      slcan.putCANMessage(msg);
       if (msg.id == 0x42) {
         led1 = 1;
         ledTimer.reset();
@@ -57,7 +90,7 @@ int main() {
 
         // Do edge actions
         if (thisButton == false) {
-          can.write(CANMessage(0x42, (char*)NULL, 0));
+          transmitAndEchoCANMessage(CANMessage(0x42, NULL, 0));
         }
       }
     }
@@ -83,7 +116,16 @@ int main() {
       uint8_t data[2];
       data[0] = (hue >> 8) & 0xff;
       data[1] = (hue >> 0) & 0xff;
-      can.write(CANMessage(0x43, (char*)data, 2));
+      transmitAndEchoCANMessage(CANMessage(0x43, (char*)data, 2));
+    }
+
+    // Process SLCAN commands and report CAN messages
+    if (serial.configured()) {
+      slcan.update();
+    } else {
+      // Try reconnecting to the USB host
+      slcan.reset();
+      serial.connect(false);
     }
   }
 }

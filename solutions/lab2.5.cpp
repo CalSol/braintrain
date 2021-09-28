@@ -22,6 +22,7 @@ int main() {
 
   // Initialize CAN controller at 1 Mbaud
   can.frequency(1000000);
+  can.reset();
 
   while (true) {
     // CAN receive handling

@@ -15,6 +15,7 @@ CAN can(D10, D2);
 int main() {
   // Initialize CAN controller at 1 Mbaud
   can.frequency(1000000);
+  can.reset();
 
   while (true) {
     CANMessage msg;
