@@ -12,7 +12,7 @@ DigitalIn btn(P0_4);
 
 RawSerial serial(P0_8, NC, 115200);
 
-CAN can(P0_28, P0_29);
+CAN can(P0_28, P0_29); // RX, TX
 
 Mail<CANMessage, 16> canTransmitQueue;
 

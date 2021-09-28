@@ -10,7 +10,7 @@ RGBPwmOut rgbLed(D9, D11, D12);
 
 DigitalIn btn(D8, PullUp);
 
-CAN can(D10, D2);
+CAN can(D10, D2); // RX, TX
 
 int main() {
   // Initialize CAN controller at 1 Mbaud

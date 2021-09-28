@@ -10,7 +10,7 @@ RGBPwmOut rgbLed(D9, D11, D12);
 
 DigitalIn btn(D8, PullUp);
 
-CAN can(D10, D2);
+CAN can(D10, D2); // RX, TX
 
 const uint16_t DEBOUNCE_TIME_MS = 50;
 const uint16_t RGB_LED_UPDATE_MS = 20;  // a respectable 50 Hz
