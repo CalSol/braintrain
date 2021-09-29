@@ -44,20 +44,20 @@ The CAN controller operates on two different, single-ended (non-differential), l
 
 A CAN transceiver bridges the logic-level TXD/RXD lines and the bus-level CANH/CANL lines. While CAN controllers may be a on-chip peripheral on some microcontrollers, CAN transceivers are usually separate chips and may provide some degree of electrical isolation.
 
-## Hardware Setup
-
-TODO fit everything onto breadboard, basically say to connect Vcc, GND, TX, RX. Also make note that Vcc is 5V but IO is 5V tolerant (and TX is 3v3 compatible). Use yellow wire for CANH and green for CANL.
-
 ## Lab 2.1: Getting Started
 
-The lab hardware will already be set up for you, consisting of a CAN network with a central node (which you should NOT reprogram) and several other nodes for deploying lab code. Multiple people can work on different nodes on the same network simultaneously.
+Add the following CAN circuit onto your breadboard, in addition to the existing switch and RGB LED circuit:
 
-**The central node's USB port must be plugged in, this provides the necessary voltage for the CAN-side transceivers.**
+![schematic](docs/circuit_breadboard_can.png)
 
-> Hardware setup: The LPC1549 on the BRAINv3.3 has a CAN controller, but no onboard CAN transceiver. Therefore, each BRAIN is paired up with a CAN transceiver board. The logic level RXD line on the transceiver is connected to P0_28 on the BRAIN, the TXD line is connected to P0_29, and power sourced from the BRAIN. On the CAN side, all the power, CANH, and CANL lines (respectively) are tied together, with a 120-ohm terminator on each end.
+Here is one possible way to breadboard it. Be careful connecting the pins that carry 5v (<span style="color: orange">highlighted in orange</span>), not all pins are 5v tolerant! As for the CAN-side wires, we will use the convention of <span style="color: yellow">yellow for CANH</span> and <span style="color: green">green for CANL</span>.
+
+![diagram](docs/breadboard_can.png)
+
+To connect multiple boards (or your board to the central node), connect all the CANH pins together and connect all the CANL pins together.
 
 ### Optional: debug tools
-The master node is pre-programmed to respond to and generate CAN messages used in this lab. It also acts as a USB CAN network sniffer using the SLCAN protocol, appearing as a serial port (like lab1's serial "Hello World") to your host machine. Once you connect the master's USB port to your computer, find the serial port [like you did in lab1](lab1.md#serial-port).
+The central node is pre-programmed to respond to and generate CAN messages used in this lab. It also acts as a USB CAN network sniffer using the SLCAN protocol, appearing as a serial port (like lab1's serial "Hello World") to your host machine. Once you connect the central node's USB port to your computer, find the serial port [like you did in lab1](lab1.md#serial-port).
 
 There are many protocol analyzer programs available, but for this lab we'll use [USBtin](http://www.fischl.de/usbtin/), which is a simple, cross-platform GUI program for displaying CAN traffic.
 
