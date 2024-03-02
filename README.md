@@ -17,6 +17,11 @@ To get started, you need to setup the PlatformIO build system and clone this rep
 Follow the [detailed setup instructions](SETUP.md).
 
 
+## Troubleshooting
+Find the solutions to your troubles here:
+- [Troubleshoot.md](Troubleshoot.md)
+- [CalSol Wiki on Nucleo](https://www.google.com/) Sorry I forgot the link. You can search it up on the wiki.
+
 ## Quick Reference
 To upload firmware to the board from the command line, run:
 ```
